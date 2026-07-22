@@ -32,6 +32,7 @@ export default function ProductTable({ monthId, category, items, loading, onChan
 
   const [sortConfig, setSortConfig] = useState({ key: null, dir: 'asc' });
   const [filters, setFilters] = useState({});
+  const [showCalculated, setShowCalculated] = useState(false);
 
   function makeEmpty() {
     return {
@@ -133,10 +134,10 @@ export default function ProductTable({ monthId, category, items, loading, onChan
           <h2 className="text-lg font-semibold text-brand-700">{category.name}</h2>
           <p className="text-xs text-slate-500">{items.length} sản phẩm · Bấm vào tiêu đề cột để sắp xếp</p>
         </div>
+        <div className="flex gap-2"><button className="btn-ghost text-xs py-1 px-2" onClick={() => setShowCalculated(v => !v)}>{showCalculated ? "Ẩn cột tính toán" : "Hiện cột tính toán"}</button>
         <button className="btn" onClick={() => setAdding(v => !v)}>
           {adding ? 'Đóng' : '+ Thêm sản phẩm'}
-        </button>
-      </div>
+        </button></div></div>
 
       <div className="scroll-x">
         <table className="tbl text-sm">
@@ -147,15 +148,15 @@ export default function ProductTable({ monthId, category, items, loading, onChan
               {showLoai && <Th k="loaiHang" label="Loại hàng" />}
               <Th k="sl" label="SL" className="text-right" />
               <Th k="giaMua" label="Giá mua" className="text-right" />
-              <th className="text-right bg-slate-50">Tổng vốn</th>
+              {showCalculated && <th className="text-right bg-slate-50">Tổng vốn</th>}
               <Th k="slCon" label="SL còn" className="text-right" />
-              <th className="text-right bg-slate-50">Vốn còn</th>
+              {showCalculated && <th className="text-right bg-slate-50">Vốn còn</th>}
               <Th k="giaBan" label="Giá bán" className="text-right" />
               <Th k="slBan" label="SL bán" className="text-right" />
-              <th className="text-right bg-slate-50">Tổng bán</th>
-              <th className="text-right bg-slate-50">Tổng lãi</th>
+              {showCalculated && <th className="text-right bg-slate-50">Tổng bán</th>}
+              {showCalculated && <th className="text-right bg-slate-50">Tổng lãi</th>}
               <Th k="slChi" label="SL chi" className="text-right" />
-              <th className="text-right bg-slate-50">Tổng chi</th>
+              {showCalculated && <th className="text-right bg-slate-50">Tổng chi</th>}
               <Th k="date" label="Date" className="min-w-[80px]" />
               <Th k="baoDongMonths" label="Báo động" className="text-center w-20 text-[11px] leading-tight" />
               <Th k="dienGiai" label="Diễn giải" className="min-w-[160px]" />
@@ -169,15 +170,15 @@ export default function ProductTable({ monthId, category, items, loading, onChan
               {showLoai && <td className="px-1 py-1"><FilterInput k="loaiHang" /></td>}
               <td className="px-1 py-1"><FilterInput k="sl" /></td>
               <td className="px-1 py-1"><FilterInput k="giaMua" /></td>
-              <td className="bg-slate-50"></td>
+              {showCalculated && <td className="bg-slate-50"></td>}
               <td className="px-1 py-1"><FilterInput k="slCon" /></td>
-              <td className="bg-slate-50"></td>
+              {showCalculated && <td className="bg-slate-50"></td>}
               <td className="px-1 py-1"><FilterInput k="giaBan" /></td>
               <td className="px-1 py-1"><FilterInput k="slBan" /></td>
-              <td className="bg-slate-50"></td>
-              <td className="bg-slate-50"></td>
+              {showCalculated && <td className="bg-slate-50"></td>}
+              {showCalculated && <td className="bg-slate-50"></td>}
               <td className="px-1 py-1"><FilterInput k="slChi" /></td>
-              <td className="bg-slate-50"></td>
+              {showCalculated && <td className="bg-slate-50"></td>}
               <td className="px-1 py-1"><FilterInput k="date" /></td>
               <td></td>
               <td className="px-1 py-1"><FilterInput k="dienGiai" /></td>
@@ -188,13 +189,13 @@ export default function ProductTable({ monthId, category, items, loading, onChan
           </thead>
           <tbody>
             {adding && (
-              <NewRow row={newRow} setRow={setNewRow} showLoai={showLoai} onSave={saveNew} onCancel={() => { setAdding(false); setNewRow(makeEmpty()); }} />
+              <NewRow row={newRow} setRow={setNewRow} showLoai={showLoai} showCalculated={showCalculated} onSave={saveNew} onCancel={() => { setAdding(false); setNewRow(makeEmpty()); }} />
             )}
             {processedItems.map((p) => (
-              <EditableRow key={p._id} index={p._originalIndex} product={p} showLoai={showLoai} onChanged={onChanged} />
+              <EditableRow key={p._id} index={p._originalIndex} product={p} showLoai={showLoai} showCalculated={showCalculated} onChanged={onChanged} />
             ))}
             {!processedItems.length && !adding && (
-              <tr><td colSpan={showLoai ? 20 : 19} className="text-center text-slate-400 py-6">
+              <tr><td colSpan={showLoai ? (showCalculated ? 20 : 15) : (showCalculated ? 19 : 14)} className="text-center text-slate-400 py-6">
                 {loading ? 'Đang tải…' : 'Không có dữ liệu'}
               </td></tr>
             )}
@@ -203,15 +204,15 @@ export default function ProductTable({ monthId, category, items, loading, onChan
             <tfoot>
               <tr className="font-semibold bg-brand-50/50">
                 <td colSpan={showLoai ? 5 : 4} className="text-right pr-2">Tổng:</td>
-                <td className="text-right">{fmt(totals.tongVon)}</td>
+                {showCalculated && <td className="text-right">{fmt(totals.tongVon)}</td>}
                 <td></td>
-                <td className="text-right">{fmt(totals.vonCon)}</td>
+                {showCalculated && <td className="text-right">{fmt(totals.vonCon)}</td>}
                 <td></td>
                 <td></td>
-                <td className="text-right">{fmt(totals.tongBan)}</td>
-                <td className="text-right text-green-700">{fmt(totals.tongLai)}</td>
+                {showCalculated && <td className="text-right">{fmt(totals.tongBan)}</td>}
+                {showCalculated && <td className="text-right text-green-700">{fmt(totals.tongLai)}</td>}
                 <td></td>
-                <td className="text-right text-red-700">{fmt(totals.tongChi)}</td>
+                {showCalculated && <td className="text-right text-red-700">{fmt(totals.tongChi)}</td>}
                 <td colSpan={6}></td>
               </tr>
             </tfoot>
@@ -222,8 +223,20 @@ export default function ProductTable({ monthId, category, items, loading, onChan
   );
 }
 
-function NewRow({ row, setRow, showLoai, onSave, onCancel }) {
-  const upd = (k, v) => setRow(r => ({ ...r, [k]: v }));
+function NewRow({ row, setRow, showLoai, showCalculated, onSave, onCancel }) {
+  const upd = (k, v) => setRow(r => {
+    let next = { ...r, [k]: v };
+    if (k === 'sl' || k === 'slBan' || k === 'slChi') {
+      if (k === 'slBan' && next.slBan > next.sl) next.slBan = next.sl;
+      if (k === 'slChi' && next.slChi > next.sl) next.slChi = next.sl;
+      let sl = Number(next.sl) || 0;
+      let slBan = Number(next.slBan) || 0;
+      let slChi = Number(next.slChi) || 0;
+      let con = sl - slBan - slChi;
+      next.slCon = con >= 0 ? con : 0;
+    }
+    return next;
+  });
   return (
     <tr className="bg-amber-50/40">
       <td className="text-center">➕</td>
@@ -231,15 +244,15 @@ function NewRow({ row, setRow, showLoai, onSave, onCancel }) {
       {showLoai && <td><input className="cell-input" value={row.loaiHang} onChange={e => upd('loaiHang', e.target.value)} /></td>}
       <NumInput value={row.sl} onChange={v => upd('sl', v)} />
       <NumInput value={row.giaMua} onChange={v => upd('giaMua', v)} />
-      <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.sl || 0) * (row.giaMua || 0)))}</td>
+      {showCalculated && <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.sl || 0) * (row.giaMua || 0)))}</td>}
       <NumInput value={row.slCon} onChange={v => upd('slCon', v)} placeholder={String(row.sl || 0)} />
-      <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.slCon || 0) * (row.giaMua || 0)))}</td>
+      {showCalculated && <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.slCon || 0) * (row.giaMua || 0)))}</td>}
       <NumInput value={row.giaBan} onChange={v => upd('giaBan', v)} />
       <NumInput value={row.slBan} onChange={v => upd('slBan', v)} />
-      <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.slBan || 0) * (row.giaBan || 0)))}</td>
-      <td className="text-right text-slate-400 bg-slate-50"></td>
+      {showCalculated && <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.slBan || 0) * (row.giaBan || 0)))}</td>}
+      {showCalculated && <td className="text-right text-slate-400 bg-slate-50"></td>}
       <NumInput value={row.slChi} onChange={v => upd('slChi', v)} />
-      <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.slChi || 0) * (row.giaMua || 0)))}</td>
+      {showCalculated && <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.slChi || 0) * (row.giaMua || 0)))}</td>}
       <td><input className="cell-input text-center" value={row.date} onChange={e => upd('date', e.target.value)} placeholder="mm/yy" /></td>
       <NumInput value={row.baoDongMonths} onChange={v => upd('baoDongMonths', v)} />
       <td><input className="cell-input" value={row.dienGiai} onChange={e => upd('dienGiai', e.target.value)} /></td>
@@ -255,7 +268,7 @@ function NewRow({ row, setRow, showLoai, onSave, onCancel }) {
   );
 }
 
-function EditableRow({ index, product, showLoai, onChanged }) {
+function EditableRow({ index, product, showLoai, showCalculated, onChanged }) {
   const [local, setLocal] = useState(product);
   useEffect(() => { setLocal(product); }, [product._id, product.updatedAt]);
   const savingRef = useRef(null);
@@ -264,6 +277,15 @@ function EditableRow({ index, product, showLoai, onChanged }) {
   function upd(k, v) {
     setLocal(prev => {
       const next = { ...prev, [k]: v };
+      if (k === 'sl' || k === 'slBan' || k === 'slChi') {
+        if (k === 'slBan' && next.slBan > next.sl) next.slBan = next.sl;
+        if (k === 'slChi' && next.slChi > next.sl) next.slChi = next.sl;
+        let sl = Number(next.sl) || 0;
+        let slBan = Number(next.slBan) || 0;
+        let slChi = Number(next.slChi) || 0;
+        let con = sl - slBan - slChi;
+        next.slCon = con >= 0 ? con : 0;
+      }
       if (savingRef.current) clearTimeout(savingRef.current);
       savingRef.current = setTimeout(() => save(next), 500);
       return next;
@@ -303,15 +325,15 @@ function EditableRow({ index, product, showLoai, onChanged }) {
       {showLoai && <td><input className="cell-input" value={local.loaiHang || ''} onChange={e => upd('loaiHang', e.target.value)} /></td>}
       <NumCell value={local.sl} onChange={v => upd('sl', v)} />
       <NumCell value={local.giaMua} onChange={v => upd('giaMua', v)} />
-      <td className="text-right bg-slate-50 text-slate-600">{fmt(derived.tongVon)}</td>
+      {showCalculated && <td className="text-right bg-slate-50 text-slate-600">{fmt(derived.tongVon)}</td>}
       <NumCell value={local.slCon} onChange={v => upd('slCon', v)} />
-      <td className="text-right bg-slate-50 text-slate-600">{fmt(derived.vonCon)}</td>
+      {showCalculated && <td className="text-right bg-slate-50 text-slate-600">{fmt(derived.vonCon)}</td>}
       <NumCell value={local.giaBan} onChange={v => upd('giaBan', v)} />
       <NumCell value={local.slBan} onChange={v => upd('slBan', v)} />
-      <td className="text-right bg-slate-50 text-slate-600">{fmt(derived.tongBan)}</td>
-      <td className={`text-right bg-slate-50 font-medium ${derived.tongLai >= 0 ? 'text-green-700' : 'text-red-700'}`}>{fmt(derived.tongLai)}</td>
+      {showCalculated && <td className="text-right bg-slate-50 text-slate-600">{fmt(derived.tongBan)}</td>}
+      {showCalculated && <td className={`text-right bg-slate-50 font-medium ${derived.tongLai >= 0 ? 'text-green-700' : 'text-red-700'}`}>{fmt(derived.tongLai)}</td>}
       <NumCell value={local.slChi} onChange={v => upd('slChi', v)} />
-      <td className="text-right bg-slate-50 text-red-600">{fmt(derived.tongChi)}</td>
+      {showCalculated && <td className="text-right bg-slate-50 text-red-600">{fmt(derived.tongChi)}</td>}
       <td className="p-1"><input className={dateClass} value={local.date || ''} onChange={e => upd('date', e.target.value)} title={remain !== null ? `Còn ${remain} tháng` : ''} /></td>
       <NumCell value={local.baoDongMonths ?? 6} onChange={v => upd('baoDongMonths', v)} />
       <td><input className="cell-input" value={local.dienGiai || ''} onChange={e => upd('dienGiai', e.target.value)} /></td>
