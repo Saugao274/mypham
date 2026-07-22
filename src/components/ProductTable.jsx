@@ -256,8 +256,8 @@ function NewRow({ row, setRow, showLoai, showCalculated, onSave, onCancel }) {
   return (
     <tr className="bg-amber-50/40">
       <td className="text-center">➕</td>
-      <td><input autoFocus className="cell-input" value={row.ten} onChange={e => upd('ten', e.target.value)} placeholder="Tên sản phẩm" /></td>
-      {showLoai && <td><input className="cell-input" value={row.loaiHang} onChange={e => upd('loaiHang', e.target.value)} /></td>}
+      <td><AutoTextArea autoFocus className="font-medium" value={row.ten} onChange={v => upd('ten', v)} placeholder="Tên sản phẩm" /></td>
+      {showLoai && <td><AutoTextArea value={row.loaiHang} onChange={v => upd('loaiHang', v)} /></td>}
       <NumInput value={row.sl} onChange={v => upd('sl', v)} />
       <NumInput value={row.giaMua} onChange={v => upd('giaMua', v)} />
       {showCalculated && <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.sl || 0) * (row.giaMua || 0)))}</td>}
@@ -271,9 +271,9 @@ function NewRow({ row, setRow, showLoai, showCalculated, onSave, onCancel }) {
       {showCalculated && <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.slChi || 0) * (row.giaMua || 0)))}</td>}
       <td><input className="cell-input text-center" value={row.date} onChange={e => upd('date', e.target.value)} placeholder="mm/yy" /></td>
       <NumInput value={row.baoDongMonths} onChange={v => upd('baoDongMonths', v)} />
-      <td><input className="cell-input" value={row.dienGiai} onChange={e => upd('dienGiai', e.target.value)} /></td>
+      <td><AutoTextArea value={row.dienGiai} onChange={v => upd('dienGiai', v)} /></td>
       <NumInput value={row.giamCuoc} onChange={v => upd('giamCuoc', v)} />
-      <td><input className="cell-input" value={row.nhap} onChange={e => upd('nhap', e.target.value)} /></td>
+      <td><AutoTextArea value={row.nhap} onChange={v => upd('nhap', v)} /></td>
       <td>
         <div className="flex gap-1 justify-center">
           <button className="text-green-600 hover:text-green-800 font-bold px-1" onClick={onSave} title="Lưu">✓</button>
@@ -339,8 +339,8 @@ function EditableRow({ index, product, showLoai, showCalculated, onChanged, onRo
   return (
     <tr className="hover:bg-slate-50/50 transition-colors">
       <td className="text-slate-400 text-center font-medium">{index}</td>
-      <td><input className="cell-input" value={local.ten} onChange={e => upd('ten', e.target.value)} /></td>
-      {showLoai && <td><input className="cell-input" value={local.loaiHang || ''} onChange={e => upd('loaiHang', e.target.value)} /></td>}
+      <td><AutoTextArea className="font-medium" value={local.ten} onChange={v => upd('ten', v)} /></td>
+      {showLoai && <td><AutoTextArea value={local.loaiHang || ''} onChange={v => upd('loaiHang', v)} /></td>}
       <NumCell value={local.sl} onChange={v => upd('sl', v)} />
       <NumCell value={local.giaMua} onChange={v => upd('giaMua', v)} />
       {showCalculated && <td className="text-right bg-slate-50 text-slate-600">{fmt(derived.tongVon)}</td>}
@@ -354,9 +354,9 @@ function EditableRow({ index, product, showLoai, showCalculated, onChanged, onRo
       {showCalculated && <td className="text-right bg-slate-50 text-red-600">{fmt(derived.tongChi)}</td>}
       <td className="p-1"><input className={dateClass} value={local.date || ''} onChange={e => upd('date', e.target.value)} title={remain !== null ? `Còn ${remain} tháng` : ''} /></td>
       <NumCell value={local.baoDongMonths ?? 6} onChange={v => upd('baoDongMonths', v)} />
-      <td><input className="cell-input" value={local.dienGiai || ''} onChange={e => upd('dienGiai', e.target.value)} /></td>
+      <td><AutoTextArea value={local.dienGiai || ''} onChange={v => upd('dienGiai', v)} /></td>
       <NumCell value={local.giamCuoc} onChange={v => upd('giamCuoc', v)} />
-      <td><input className="cell-input" value={local.nhap || ''} onChange={e => upd('nhap', e.target.value)} /></td>
+      <td><AutoTextArea value={local.nhap || ''} onChange={v => upd('nhap', v)} /></td>
       <td className="text-center">
         <button onClick={del} className="text-slate-400 hover:text-red-600 p-1" title="Xoá">✕</button>
       </td>
@@ -376,6 +376,29 @@ function NumInput({ value, onChange, placeholder }) {
         className="cell-input cell-input-num"
       />
     </td>
+  );
+}
+
+function AutoTextArea({ value, onChange, placeholder, className = "", autoFocus }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.height = 'auto';
+      ref.current.style.height = ref.current.scrollHeight + 'px';
+    }
+  }, [value]);
+
+  return (
+    <textarea
+      ref={ref}
+      value={value || ''}
+      onChange={e => onChange(e.target.value)}
+      placeholder={placeholder}
+      className={`cell-input resize-none overflow-hidden min-h-[32px] leading-[1.3] ${className}`}
+      rows={1}
+      autoFocus={autoFocus}
+    />
   );
 }
 function NumCell({ value, onChange }) {
