@@ -15,9 +15,9 @@ export default function ManagePage() {
       <div className="bg-white border border-slate-200 rounded-xl p-4 text-sm text-slate-600">
         <h3 className="font-semibold text-brand-700 mb-2">💡 Mẹo dùng</h3>
         <ul className="space-y-1.5 list-disc pl-5">
-          <li>Tạo tháng mới rồi bấm <b>"Carry-over"</b> để chép tồn kho từ tháng trước sang.</li>
-          <li>Có thể import từ file Excel máy tính, hoặc dán link Google Sheet đã chia sẻ công khai.</li>
-          <li>Chọn <b>"Xoá và ghi đè"</b> khi import nếu muốn thay thế dữ liệu tháng đó.</li>
+          <li>Tạo tháng mới rồi bấm <b>"Kết chuyển"</b> để chép tồn kho từ tháng trước sang.</li>
+          <li>Có thể nhập từ file Excel máy tính, hoặc dán link Google Sheet đã chia sẻ công khai.</li>
+          <li>Chọn <b>"Xoá và ghi đè"</b> khi nhập nếu muốn thay thế dữ liệu tháng đó.</li>
           <li>Xuất Excel giữ đúng cấu trúc sheet như file gốc — mở lại được bằng Excel/Google Sheets.</li>
         </ul>
       </div>
@@ -76,9 +76,9 @@ function MonthManager({ months, onChange, onSelect, activeId }) {
         </label>
       </div>
       <label className="text-sm block mb-3">
-        <span className="block text-xs text-slate-500 mb-1">Carry-over tồn kho từ tháng (tuỳ chọn)</span>
+        <span className="block text-xs text-slate-500 mb-1">Kết chuyển tồn kho từ tháng (tuỳ chọn)</span>
         <select value={carryFromId} onChange={e => setCarryFromId(e.target.value)} className="w-full border rounded-md px-2 py-1.5">
-          <option value="">— Không carry-over (tháng trống) —</option>
+          <option value="">— Không kết chuyển (tháng trống) —</option>
           {months.map(m => <option key={m._id} value={m._id}>{m.label}</option>)}
         </select>
       </label>
@@ -134,8 +134,8 @@ function ImportPanel({ months, activeId, onImported }) {
         else { if (!targetMonthId) throw new Error('Chọn tháng đích'); fd.append('monthId', targetMonthId); }
         const res = await fetch(`/api/import/file?replace=${replace ? 1 : 0}`, { method: 'POST', body: fd });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Lỗi import');
-        setMsg(`✓ Đã import ${data.imported.products} sản phẩm, ${data.imported.debts} khoản nợ`);
+        if (!res.ok) throw new Error(data.error || 'Lỗi khi nhập');
+        setMsg(`✓ Đã nhập ${data.imported.products} sản phẩm, ${data.imported.debts} khoản nợ`);
       } else {
         if (!gUrl.trim()) throw new Error('Dán link Google Sheet vào');
         const body = { url: gUrl, replace };
@@ -147,8 +147,8 @@ function ImportPanel({ months, activeId, onImported }) {
           body: JSON.stringify(body),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Lỗi import');
-        setMsg(`✓ Đã import ${data.imported.products} sản phẩm, ${data.imported.debts} khoản nợ`);
+        if (!res.ok) throw new Error(data.error || 'Lỗi khi nhập');
+        setMsg(`✓ Đã nhập ${data.imported.products} sản phẩm, ${data.imported.debts} khoản nợ`);
       }
       onImported();
     } catch (e) { setMsg('❌ ' + e.message); }
@@ -157,7 +157,7 @@ function ImportPanel({ months, activeId, onImported }) {
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-4">
-      <h3 className="font-semibold text-brand-700 mb-3">Import dữ liệu</h3>
+      <h3 className="font-semibold text-brand-700 mb-3">Nhập dữ liệu</h3>
 
       <div className="flex gap-1 mb-3">
         <button className={`flex-1 py-1.5 rounded-md text-sm font-medium ${tab === 'file' ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'}`} onClick={() => setTab('file')}>Từ máy tính</button>
@@ -181,7 +181,7 @@ function ImportPanel({ months, activeId, onImported }) {
       <div className="mb-3 p-3 bg-slate-50 rounded-md border border-slate-100 space-y-2">
         <label className="flex items-center gap-2 text-sm">
           <input type="radio" checked={!createNew} onChange={() => setCreateNew(false)} />
-          <span>Import vào tháng đang chọn:</span>
+          <span>Nhập vào tháng đang chọn:</span>
           <select value={targetMonthId} onChange={e => setTargetMonthId(e.target.value)}
             className="text-sm border rounded-md px-2 py-1 flex-1" disabled={createNew}>
             <option value="">— Chọn —</option>
@@ -206,7 +206,7 @@ function ImportPanel({ months, activeId, onImported }) {
       </label>
 
       <button className="btn w-full justify-center" onClick={doImport} disabled={busy}>
-        {busy ? 'Đang import…' : 'Bắt đầu import'}
+        {busy ? 'Đang nhập dữ liệu…' : 'Bắt đầu nhập'}
       </button>
       {msg && <div className="mt-2 text-sm">{msg}</div>}
     </div>

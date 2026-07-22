@@ -76,7 +76,7 @@ function EmptyMonth() {
       <div className="text-lg font-semibold mb-1">Chưa có tháng nào</div>
       <p className="text-sm text-slate-500 mb-4">
         Tạo tháng mới hoặc import từ file Excel / Google Sheet ở mục
-        <a href="/dashboard/manage" className="text-brand-600 hover:underline"> Tháng / Import / Export</a>.
+        <a href="/dashboard/manage" className="text-brand-600 hover:underline"> Tháng / Nhập / Xuất</a>.
       </p>
     </div>
   );

@@ -24,7 +24,7 @@ export default function DebtsPage() {
   if (!months.length) {
     return <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
       <div className="text-lg font-semibold mb-1">Chưa có tháng nào</div>
-      <p className="text-sm text-slate-500">Tạo tháng ở mục <a href="/dashboard/manage" className="text-brand-600 hover:underline">Tháng / Import / Export</a>.</p>
+      <p className="text-sm text-slate-500">Tạo tháng ở mục <a href="/dashboard/manage" className="text-brand-600 hover:underline">Tháng / Nhập / Xuất</a>.</p>
     </div>;
   }
   return <DebtTable monthId={monthId} debts={debts} loading={loading} onChanged={loadDebts} />;

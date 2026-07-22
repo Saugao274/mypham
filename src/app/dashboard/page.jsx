@@ -21,7 +21,7 @@ export default function DashboardPage() {
     return <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
       <div className="text-lg font-semibold mb-1">Chưa có dữ liệu</div>
       <p className="text-sm text-slate-500">
-        Hãy vào <a href="/dashboard/manage" className="text-brand-600 hover:underline">Tháng / Import / Export</a> để tạo tháng đầu tiên hoặc import từ file Excel/Google Sheet.
+        Hãy vào <a href="/dashboard/manage" className="text-brand-600 hover:underline">Tháng / Nhập / Xuất</a> để tạo tháng đầu tiên hoặc nhập từ file Excel/Google Sheet.
       </p>
     </div>;
   }

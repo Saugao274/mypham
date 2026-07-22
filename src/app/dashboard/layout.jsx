@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }) {
     { href: '/dashboard', label: 'Tổng hợp' },
     { href: '/dashboard/products', label: 'Sản phẩm' },
     { href: '/dashboard/debts', label: 'Nợ' },
-    { href: '/dashboard/manage', label: 'Tháng / Import / Export' },
+    { href: '/dashboard/manage', label: 'Tháng / Nhập / Xuất' },
   ];
 
   return (
@@ -59,7 +59,7 @@ export default function DashboardLayout({ children }) {
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 md:px-6 py-4 md:py-6">
         {children}
       </main>
-      <footer className="text-center text-xs text-slate-400 py-4">Made with 💗 · Next.js + MongoDB</footer>
+      <footer className="text-center text-xs text-slate-400 py-4">Gái yêu làm cho mẹ nè 💖</footer>
     </div>
   );
 }
