@@ -11,7 +11,8 @@ body {
 
 /* Table utilities */
 .tbl { @apply w-full text-sm border-collapse; }
-.tbl th { @apply bg-brand-50 text-brand-700 font-semibold px-2 py-2 text-left border border-brand-100 whitespace-nowrap; }
+.tbl thead { @apply sticky top-0 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)]; }
+.tbl th { @apply bg-brand-50 text-brand-700 font-semibold px-2 py-2 text-left border border-brand-100 whitespace-nowrap bg-clip-padding; }
 .tbl td { @apply px-2 py-1.5 border border-slate-200 align-top; }
 .tbl tr:hover td { @apply bg-brand-50/50; }
 
@@ -38,5 +39,5 @@ body {
 .chip { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium; }
 
 /* Scroll container for wide tables */
-.scroll-x { @apply overflow-x-auto -mx-3 md:mx-0; }
+.scroll-x { @apply overflow-x-auto overflow-y-auto -mx-3 md:mx-0 max-h-[calc(100vh-210px)]; }
 .scroll-x > table { @apply min-w-[900px]; }

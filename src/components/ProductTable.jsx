@@ -15,10 +15,26 @@ function computeDerived(p) {
 
 function getMonthsRemaining(dateStr) {
   if (!dateStr) return null;
-  const m = String(dateStr).match(/(\d{1,2})[\/\-](\d{2,4})/);
-  if (!m) return null;
-  let month = parseInt(m[1], 10);
-  let year = parseInt(m[2], 10);
+  const str = String(dateStr).trim();
+  let month, year;
+  
+  // 1. Try DD/MM/YYYY or DD/MM/YY
+  let m = str.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if (m) {
+    month = parseInt(m[2], 10);
+    year = parseInt(m[3], 10);
+  } else {
+    // 2. Try MM/YYYY or MM/YY
+    m = str.match(/(\d{1,2})[\/\-](\d{2,4})/);
+    if (m) {
+      month = parseInt(m[1], 10);
+      year = parseInt(m[2], 10);
+      if (month > 12) return null; // Invalid month, probably Day/Month without Year
+    } else {
+      return null;
+    }
+  }
+
   if (year < 100) year += 2000;
   const now = new Date();
   const curMonth = now.getMonth() + 1;
@@ -26,7 +42,7 @@ function getMonthsRemaining(dateStr) {
   return (year - curYear) * 12 + (month - curMonth);
 }
 
-export default function ProductTable({ monthId, category, items, loading, onChanged }) {
+export default function ProductTable({ monthId, category, items, loading, onChanged, onRowChange }) {
   const [adding, setAdding] = useState(false);
   const [newRow, setNewRow] = useState(makeEmpty());
 
@@ -192,7 +208,7 @@ export default function ProductTable({ monthId, category, items, loading, onChan
               <NewRow row={newRow} setRow={setNewRow} showLoai={showLoai} showCalculated={showCalculated} onSave={saveNew} onCancel={() => { setAdding(false); setNewRow(makeEmpty()); }} />
             )}
             {processedItems.map((p) => (
-              <EditableRow key={p._id} index={p._originalIndex} product={p} showLoai={showLoai} showCalculated={showCalculated} onChanged={onChanged} />
+              <EditableRow key={p._id} index={p._originalIndex} product={p} showLoai={showLoai} showCalculated={showCalculated} onChanged={onChanged} onRowChange={onRowChange} />
             ))}
             {!processedItems.length && !adding && (
               <tr><td colSpan={showLoai ? (showCalculated ? 20 : 15) : (showCalculated ? 19 : 14)} className="text-center text-slate-400 py-6">
@@ -268,7 +284,7 @@ function NewRow({ row, setRow, showLoai, showCalculated, onSave, onCancel }) {
   );
 }
 
-function EditableRow({ index, product, showLoai, showCalculated, onChanged }) {
+function EditableRow({ index, product, showLoai, showCalculated, onChanged, onRowChange }) {
   const [local, setLocal] = useState(product);
   useEffect(() => { setLocal(product); }, [product._id, product.updatedAt]);
   const savingRef = useRef(null);
@@ -286,6 +302,9 @@ function EditableRow({ index, product, showLoai, showCalculated, onChanged }) {
         let con = sl - slBan - slChi;
         next.slCon = con >= 0 ? con : 0;
       }
+      
+      if (onRowChange) onRowChange(product._id, next);
+      
       if (savingRef.current) clearTimeout(savingRef.current);
       savingRef.current = setTimeout(() => save(next), 500);
       return next;
@@ -301,7 +320,6 @@ function EditableRow({ index, product, showLoai, showCalculated, onChanged }) {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    onChanged();
   }
 
   async function del() {
@@ -314,8 +332,8 @@ function EditableRow({ index, product, showLoai, showCalculated, onChanged }) {
   const threshold = local.baoDongMonths ?? 6;
   let dateClass = "cell-input text-center font-medium";
   if (remain !== null) {
-    if (remain <= 0) dateClass += " bg-red-500 text-white border-red-600";
-    else if (remain <= threshold) dateClass += " bg-orange-400 text-white border-orange-500";
+    if (remain <= 0) dateClass += " !bg-red-500 !text-white !border-red-600";
+    else if (remain <= threshold) dateClass += " !bg-orange-400 !text-white !border-orange-500";
   }
 
   return (

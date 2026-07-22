@@ -8,10 +8,24 @@ function round2(n) { return Math.round(n * 100) / 100; }
 
 function getMonthsRemaining(dateStr) {
   if (!dateStr) return null;
-  const m = String(dateStr).match(/(\d{1,2})[\/\-](\d{2,4})/);
-  if (!m) return null;
-  let mm = parseInt(m[1], 10);
-  let yy = parseInt(m[2], 10);
+  const str = String(dateStr).trim();
+  let mm, yy;
+  
+  let m = str.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if (m) {
+    mm = parseInt(m[2], 10);
+    yy = parseInt(m[3], 10);
+  } else {
+    m = str.match(/(\d{1,2})[\/\-](\d{2,4})/);
+    if (m) {
+      mm = parseInt(m[1], 10);
+      yy = parseInt(m[2], 10);
+      if (mm > 12) return null;
+    } else {
+      return null;
+    }
+  }
+
   if (yy < 100) yy += 2000;
   const now = new Date();
   const currentMonth = now.getMonth() + 1;

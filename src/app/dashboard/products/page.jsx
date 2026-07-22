@@ -64,6 +64,9 @@ export default function ProductsPage() {
           items={items}
           loading={loading}
           onChanged={loadProducts}
+          onRowChange={(id, nextData) => {
+            setProducts(prev => prev.map(p => p._id === id ? { ...p, ...nextData } : p));
+          }}
         />
       )}
     </div>
