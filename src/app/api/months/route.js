@@ -45,10 +45,11 @@ export async function POST(req) {
       slBan: 0,
       slChi: 0,
       giamCuoc: 0,
-      date: '',
+      date: p.date || '',
+      baoDongMonths: p.baoDongMonths ?? 6,
       dienGiai: '',
       nhap: p.nhap || '',     // giữ nguồn nhập
-    })).filter(p => p.sl > 0 || p.giaMua > 0); // bỏ dòng rỗng
+    })).filter(p => p.sl > 0); // chỉ giữ lại sản phẩm có số lượng > 0
 
     if (docs.length) await Product.insertMany(docs);
   }
