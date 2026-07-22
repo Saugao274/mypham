@@ -88,15 +88,23 @@ export function parseWorkbook(buffer) {
       const r = rows[i];
       const ten = str(r[map.ten]);
       if (!ten) continue;
+      const sl = map.sl !== undefined ? num(r[map.sl]) : 0;
+      let slCon = map.slCon !== undefined ? num(r[map.slCon]) : 0;
+      if (map.slCon !== undefined && (r[map.slCon] === null || r[map.slCon] === undefined || r[map.slCon] === '')) {
+        slCon = sl;
+      } else if (map.slCon === undefined) {
+        slCon = sl;
+      }
+
       result.products.push({
         categoryKey,
         order: ++order,
         ten,
         loaiHang: map.loaiHang !== undefined ? str(r[map.loaiHang]) : '',
-        sl:       map.sl       !== undefined ? num(r[map.sl])       : 0,
+        sl,
         giaMua:   map.giaMua   !== undefined ? num(r[map.giaMua])   : 0,
         giaBan:   map.giaBan   !== undefined ? num(r[map.giaBan])   : 0,
-        slCon:    map.slCon    !== undefined ? num(r[map.slCon])    : 0,
+        slCon,
         slBan:    map.slBan    !== undefined ? num(r[map.slBan])    : 0,
         slChi:    map.slChi    !== undefined ? num(r[map.slChi])    : 0,
         giamCuoc: map.giamCuoc !== undefined ? num(r[map.giamCuoc]) : 0,
