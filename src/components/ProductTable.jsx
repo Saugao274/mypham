@@ -262,10 +262,12 @@ function EditableRow({ index, product, showLoai, onChanged }) {
   const derived = computeDerived(local);
 
   function upd(k, v) {
-    const next = { ...local, [k]: v };
-    setLocal(next);
-    if (savingRef.current) clearTimeout(savingRef.current);
-    savingRef.current = setTimeout(() => save(next), 500);
+    setLocal(prev => {
+      const next = { ...prev, [k]: v };
+      if (savingRef.current) clearTimeout(savingRef.current);
+      savingRef.current = setTimeout(() => save(next), 500);
+      return next;
+    });
   }
 
   async function save(next) {
