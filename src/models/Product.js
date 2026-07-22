@@ -25,6 +25,7 @@ const ProductSchema = new mongoose.Schema(
     giamCuoc: { type: Number, default: 0 }, // Giảm giá, trừ cước
 
     date: { type: String, default: '' },    // Giữ dạng chuỗi vì gốc có "3/26", "9/26"
+    baoDongMonths: { type: Number, default: 6 }, // Số tháng cảnh báo hết hạn
     dienGiai: { type: String, default: '' },
     nhap: { type: String, default: '' },
   },

@@ -27,7 +27,7 @@ export default function DashboardLayout({ children }) {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-3 py-3 flex items-center gap-3">
+        <div className="w-full mx-auto px-3 py-3 flex items-center gap-3">
           <button className="md:hidden btn-ghost !p-2" onClick={() => setOpen(v => !v)} aria-label="Menu">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
           </button>
@@ -56,7 +56,7 @@ export default function DashboardLayout({ children }) {
           </nav>
         )}
       </header>
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 md:px-6 py-4 md:py-6">
+      <main className="flex-1 w-full mx-auto px-3 md:px-6 py-4 md:py-6">
         {children}
       </main>
       <footer className="text-center text-xs text-slate-400 py-4">Gái yêu làm cho mẹ nè 💖</footer>

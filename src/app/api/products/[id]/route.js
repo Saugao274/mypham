@@ -7,7 +7,7 @@ export async function PATCH(req, { params }) {
   const body = await req.json();
   // Chỉ nhận các field cho phép
   const allowed = ['ten', 'loaiHang', 'sl', 'giaMua', 'giaBan', 'slCon', 'slBan', 'slChi',
-                   'giamCuoc', 'date', 'dienGiai', 'nhap', 'categoryKey', 'order'];
+                   'giamCuoc', 'date', 'baoDongMonths', 'dienGiai', 'nhap', 'categoryKey', 'order'];
   const $set = {};
   for (const k of allowed) if (k in body) $set[k] = body[k];
   const p = await Product.findByIdAndUpdate(params.id, { $set }, { new: true });
