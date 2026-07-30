@@ -22,7 +22,7 @@ export default function ProductsPage() {
     if (!monthId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/products?monthId=${monthId}`);
+      const res = await fetch(`/api/products?monthId=${monthId}&t=${Date.now()}`);
       const data = await res.json();
       setProducts(Array.isArray(data) ? data : []);
     } finally { setLoading(false); }

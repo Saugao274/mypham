@@ -13,7 +13,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!monthId) { setData(null); return; }
     setLoading(true);
-    fetch(`/api/summary/${monthId}`).then(r => r.json())
+    fetch(`/api/summary/${monthId}?t=${Date.now()}`).then(r => r.json())
       .then(setData).finally(() => setLoading(false));
   }, [monthId]);
 
