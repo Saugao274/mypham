@@ -162,22 +162,22 @@ export default function ProductTable({ monthId, category, items, loading, onChan
               <Th k="index" label="TT" className="w-12 text-center" />
               <Th k="ten" label="Tên SP" className="min-w-[180px]" />
               {showLoai && <Th k="loaiHang" label="Loại hàng" />}
-              <Th k="sl" label="SL" className="text-right" />
-              <Th k="giaMua" label="Giá mua" className="text-right" />
-              {showCalculated && <th className="text-right bg-slate-50">Tổng vốn</th>}
-              <Th k="slCon" label="SL còn" className="text-right" />
-              {showCalculated && <th className="text-right bg-slate-50">Vốn còn</th>}
-              <Th k="giaBan" label="Giá bán" className="text-right" />
-              <Th k="slBan" label="SL bán" className="text-right" />
-              {showCalculated && <th className="text-right bg-slate-50">Tổng bán</th>}
-              {showCalculated && <th className="text-right bg-slate-50">Tổng lãi</th>}
-              <Th k="slChi" label="SL chi" className="text-right" />
-              {showCalculated && <th className="text-right bg-slate-50">Tổng chi</th>}
+              <Th k="sl" label="SL" className="text-right min-w-[65px]" />
+              <Th k="giaMua" label="Giá mua" className="text-right min-w-[75px]" />
+              {showCalculated && <th className="text-right bg-slate-50 min-w-[90px]">Tổng vốn</th>}
+              <Th k="slCon" label="SL còn" className="text-right min-w-[70px]" />
+              {showCalculated && <th className="text-right bg-slate-50 min-w-[90px]">Vốn còn</th>}
+              <Th k="giaBan" label="Giá bán" className="text-right min-w-[75px]" />
+              <Th k="slBan" label="SL bán" className="text-right min-w-[70px]" />
+              {showCalculated && <th className="text-right bg-slate-50 min-w-[90px]">Tổng bán</th>}
+              {showCalculated && <th className="text-right bg-slate-50 min-w-[90px]">Tổng lãi</th>}
+              <Th k="slChi" label="SL chi" className="text-right min-w-[70px]" />
+              {showCalculated && <th className="text-right bg-slate-50 min-w-[90px]">Tổng chi</th>}
               <Th k="date" label="Date" className="min-w-[80px]" />
-              <Th k="baoDongMonths" label="Báo động" className="text-center w-20 text-[11px] leading-tight" />
+              <Th k="baoDongMonths" label="Báo động" className="text-center min-w-[70px] text-[11px] leading-tight" />
               <Th k="dienGiai" label="Diễn giải" className="min-w-[160px]" />
-              <Th k="giamCuoc" label="Giảm/cước" className="text-right" />
-              <Th k="nhap" label="Nhập" />
+              <Th k="giamCuoc" label="Giảm/cước" className="text-right min-w-[80px]" />
+              <Th k="nhap" label="Nhập" className="min-w-[100px]" />
               <th></th>
             </tr>
             <tr className="bg-slate-50/50">
