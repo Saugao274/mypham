@@ -59,7 +59,6 @@ export default function DashboardLayout({ children }) {
       <main className="flex-1 w-full mx-auto px-3 md:px-6 py-4 md:py-6">
         {children}
       </main>
-      <footer className="text-center text-xs text-slate-400 py-4">Gái yêu làm cho mẹ nè 💖</footer>
     </div>
   );
 }

@@ -39,5 +39,5 @@ body {
 .chip { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium; }
 
 /* Scroll container for wide tables */
-.scroll-x { @apply overflow-auto -mx-3 md:mx-0 h-[calc(100vh-175px)]; }
+.scroll-x { @apply overflow-auto -mx-3 md:mx-0 h-[calc(100vh-145px)]; }
 .scroll-x > table { @apply min-w-[900px]; }

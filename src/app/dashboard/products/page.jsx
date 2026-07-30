@@ -40,7 +40,7 @@ export default function ProductsPage() {
   return (
     <div className="space-y-4">
       {/* Category tabs */}
-      <div className="scroll-x">
+      <div className="overflow-x-auto pb-2 -mx-3 px-3 md:mx-0 md:px-0">
         <div className="flex gap-1.5 min-w-max px-3 md:px-0">
           {categories.map(c => {
             const count = products.filter(p => p.categoryKey === c.key).length;
