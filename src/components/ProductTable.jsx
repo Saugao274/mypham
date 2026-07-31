@@ -1,6 +1,70 @@
 'use client';
 import { useState, useRef, useEffect, useMemo } from 'react';
 
+function suggestCategory(name, items) {
+  if (!name || !items || !items.length) return "";
+  const lowerName = name.toLowerCase().trim();
+  const typedWords = lowerName.split(/\s+/);
+  
+  let bestMatch = null;
+  let maxMatchedWords = 0;
+  
+  for (const item of items) {
+    if (!item.ten || !item.loaiHang) continue;
+    const itemWords = item.ten.toLowerCase().trim().split(/\s+/);
+    let matchCount = 0;
+    while (matchCount < typedWords.length && matchCount < itemWords.length && typedWords[matchCount] === itemWords[matchCount]) {
+      matchCount++;
+    }
+    if (matchCount > maxMatchedWords) {
+      maxMatchedWords = matchCount;
+      bestMatch = item.loaiHang;
+    }
+  }
+
+  const keywords = {
+    "dầu gội": "Tóc", "dầu xả": "Tóc",
+    "kem đr": "Kem đánh răng", "kđr": "Kem đánh răng", "kdr": "Kem đánh răng",
+    "st": "Sữa tắm", "sữa tắm": "Sữa tắm",
+    "ddvs": "Cơ thể", "cơ thể": "Cơ thể",
+    "chăn lạnh": "Linh tinh", "gối": "Linh tinh", "kim vụn": "Thực phẩm", "ngũ cốc": "Thực phẩm", "kẹo": "Thực phẩm",
+    "kem nền": "Makeup", "phấn": "Makeup", "makeup": "Makeup",
+    "son": "Son", "kem": "Kem",
+    "srm": "Sữa rửa mặt", "sữa rửa mặt": "Sữa rửa mặt",
+    "tdc": "Tẩy da chết", "tẩy da chết": "Tẩy da chết",
+    "tt": "Nước tẩy trang", "tẩy trang": "Nước tẩy trang",
+    "nhh": "Nước hoa hồng", "nước hoa hồng": "Nước hoa hồng",
+    "xk": "Xịt khoáng", "xịt khoáng": "Xịt khoáng"
+  };
+
+  let kwMatch = "";
+  let matchedKw = "";
+  for (const [kw, cat] of Object.entries(keywords)) {
+    const regex = new RegExp(`(^|\\s)${kw}(\\s|$)`);
+    if (regex.test(lowerName)) {
+      kwMatch = cat;
+      matchedKw = kw;
+      break;
+    }
+  }
+
+  if (kwMatch) {
+    if (maxMatchedWords >= 2) return bestMatch;
+    
+    const exactExisting = items.find(item => item.loaiHang?.toLowerCase() === kwMatch.toLowerCase());
+    const kwRegex = new RegExp(`(^|\\s)${matchedKw}(\\s|$)`);
+    const existingWithKw = items.find(item => item.ten && kwRegex.test(item.ten.toLowerCase()));
+    
+    if (existingWithKw && existingWithKw.loaiHang) return existingWithKw.loaiHang;
+    if (exactExisting) return exactExisting.loaiHang;
+    return kwMatch;
+  }
+
+  if (maxMatchedWords >= 1) return bestMatch;
+
+  return "";
+}
+
 const round2 = n => Math.round(n * 100) / 100;
 const fmt = n => (n || n === 0) ? Number(n).toLocaleString('vi-VN') : '';
 
@@ -211,7 +275,7 @@ export default function ProductTable({ monthId, category, items, loading, onChan
           </thead>
           <tbody>
             {adding && (
-              <NewRow row={newRow} setRow={setNewRow} showLoai={showLoai} showCalculated={showCalculated} onSave={saveNew} onCancel={() => { setAdding(false); setNewRow(makeEmpty()); }} />
+              <NewRow items={items} row={newRow} setRow={setNewRow} showLoai={showLoai} showCalculated={showCalculated} onSave={saveNew} onCancel={() => { setAdding(false); setNewRow(makeEmpty()); }} />
             )}
             {processedItems.map((p) => (
               <EditableRow key={p._id} index={p._originalIndex} product={p} showLoai={showLoai} showCalculated={showCalculated} onChanged={onChanged} onRowChange={onRowChange} />
@@ -245,7 +309,7 @@ export default function ProductTable({ monthId, category, items, loading, onChan
   );
 }
 
-function NewRow({ row, setRow, showLoai, showCalculated, onSave, onCancel }) {
+function NewRow({ items, row, setRow, showLoai, showCalculated, onSave, onCancel }) {
   const trRef = useRef(null);
 
   useEffect(() => {
@@ -260,6 +324,10 @@ function NewRow({ row, setRow, showLoai, showCalculated, onSave, onCancel }) {
 
   const upd = (k, v) => setRow(r => {
     let next = { ...r, [k]: v };
+    if (k === 'ten' && v && !r.loaiHang) {
+      const sug = suggestCategory(v, items);
+      if (sug) next.loaiHang = sug;
+    }
     if (k === 'sl' || k === 'slBan' || k === 'slChi') {
       if (k === 'slBan' && next.slBan > next.sl) next.slBan = next.sl;
       if (k === 'slChi' && next.slChi > next.sl) next.slChi = next.sl;
