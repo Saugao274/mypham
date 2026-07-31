@@ -238,8 +238,8 @@ function ExportPanel({ months, activeId }) {
         File xuất có đầy đủ các sheet: mỗi danh mục + sheet Nợ + sheet Tổng hợp — giống file gốc.
       </p>
     </div>
+  );
 }
-
 function CarryDebtPanel({ months, activeId, onImported }) {
   const [sourceId, setSourceId] = useState('');
   const [targetId, setTargetId] = useState('');
