@@ -53,12 +53,18 @@ export default function ProductTable({ monthId, category, items, loading, onChan
   function makeEmpty() {
     return {
       ten: '', loaiHang: '', sl: 0, giaMua: 0, giaBan: 0, slCon: 0,
-      slBan: 0, slChi: 0, giamCuoc: 0, date: '', baoDongMonths: 6, dienGiai: '', nhap: '',
+      slBan: 0, slChi: 0, giamCuoc: 0, date: '', baoDongMonths: 12, dienGiai: '', nhap: '',
     };
   }
 
-  async function saveNew() {
-    if (!newRow.ten.trim()) return;
+  async function saveNew(isAutoSave) {
+    if (!newRow.ten.trim()) {
+      if (isAutoSave === true) {
+        setAdding(false);
+        setNewRow(makeEmpty());
+      }
+      return;
+    }
     const body = { ...newRow, monthId, categoryKey: category.key };
     if (!body.slCon) body.slCon = body.sl;
     const res = await fetch('/api/products', {
@@ -240,6 +246,18 @@ export default function ProductTable({ monthId, category, items, loading, onChan
 }
 
 function NewRow({ row, setRow, showLoai, showCalculated, onSave, onCancel }) {
+  const trRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (trRef.current && !trRef.current.contains(e.target)) {
+        onSave(true);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onSave]);
+
   const upd = (k, v) => setRow(r => {
     let next = { ...r, [k]: v };
     if (k === 'sl' || k === 'slBan' || k === 'slChi') {
@@ -254,7 +272,7 @@ function NewRow({ row, setRow, showLoai, showCalculated, onSave, onCancel }) {
     return next;
   });
   return (
-    <tr className="bg-amber-50/40">
+    <tr ref={trRef} className="bg-amber-50/40">
       <td className="text-center">➕</td>
       <td><AutoTextArea autoFocus className="font-medium" value={row.ten} onChange={v => upd('ten', v)} placeholder="Tên sản phẩm" /></td>
       {showLoai && <td><AutoTextArea value={row.loaiHang} onChange={v => upd('loaiHang', v)} /></td>}
@@ -329,10 +347,10 @@ function EditableRow({ index, product, showLoai, showCalculated, onChanged, onRo
   }
 
   const remain = getMonthsRemaining(local.date);
-  const threshold = local.baoDongMonths ?? 6;
+  const threshold = local.baoDongMonths ?? 12;
   let dateClass = "cell-input text-center font-medium";
   if (remain !== null) {
-    if (remain <= 0) dateClass += " !bg-red-500 !text-white !border-red-600";
+    if (remain <= 6) dateClass += " !bg-red-500 !text-white !border-red-600";
     else if (remain <= threshold) dateClass += " !bg-orange-400 !text-white !border-orange-500";
   }
 
@@ -353,7 +371,7 @@ function EditableRow({ index, product, showLoai, showCalculated, onChanged, onRo
       <NumCell value={local.slChi} onChange={v => upd('slChi', v)} />
       {showCalculated && <td className="text-right bg-slate-50 text-red-600">{fmt(derived.tongChi)}</td>}
       <td className="p-1"><input className={dateClass} value={local.date || ''} onChange={e => upd('date', e.target.value)} title={remain !== null ? `Còn ${remain} tháng` : ''} /></td>
-      <NumCell value={local.baoDongMonths ?? 6} onChange={v => upd('baoDongMonths', v)} />
+      <NumCell value={local.baoDongMonths ?? 12} onChange={v => upd('baoDongMonths', v)} />
       <td><AutoTextArea value={local.dienGiai || ''} onChange={v => upd('dienGiai', v)} /></td>
       <NumCell value={local.giamCuoc} onChange={v => upd('giamCuoc', v)} />
       <td><AutoTextArea value={local.nhap || ''} onChange={v => upd('nhap', v)} /></td>

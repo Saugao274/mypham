@@ -59,7 +59,7 @@ export default function DashboardPage() {
                 <div className="flex justify-between items-center mt-2">
                   <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs font-medium">Date: {a.date}</span>
                   <span className={`px-2 py-0.5 rounded text-xs font-semibold ${a.isExpired ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
-                    {a.isExpired ? 'Đã hết hạn' : `Còn ${a.remain} tháng`}
+                    {a.isExpired ? 'Báo động đỏ' : `Còn ${a.remain} tháng`}
                   </span>
                 </div>
               </div>

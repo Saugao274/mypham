@@ -54,18 +54,16 @@ export async function GET(_req, { params }) {
       vonCon  += (p.slCon || 0) * (p.giaMua || 0);
 
       const remain = getMonthsRemaining(p.date);
-      if (remain !== null) {
-        const threshold = p.baoDongMonths ?? 6;
-        if (remain <= threshold) {
-          alerts.push({
-            _id: p._id,
-            ten: p.ten,
-            date: p.date,
-            remain,
-            categoryName: cat.name,
-            isExpired: remain <= 0
-          });
-        }
+      const threshold = p.baoDongMonths ?? 12;
+      if (remain !== null && remain <= threshold) {
+        alerts.push({
+          _id: p._id,
+          ten: p.ten,
+          date: p.date,
+          remain,
+          categoryName: cat.name,
+          isExpired: remain <= 6
+        });
       }
     }
     return {
