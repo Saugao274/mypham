@@ -11,7 +11,10 @@ export default function ManagePage() {
     <div className="grid gap-4 md:grid-cols-2">
       <MonthManager months={months} onChange={reload} onSelect={setMonthId} activeId={monthId} />
       <ImportPanel months={months} activeId={monthId} onImported={reload} />
-      <ExportPanel months={months} activeId={monthId} />
+      <div className="space-y-4">
+        <CarryDebtPanel months={months} activeId={monthId} onImported={reload} />
+        <ExportPanel months={months} activeId={monthId} />
+      </div>
       <div className="bg-white border border-slate-200 rounded-xl p-4 text-sm text-slate-600">
         <h3 className="font-semibold text-brand-700 mb-2">💡 Mẹo dùng</h3>
         <ul className="space-y-1.5 list-disc pl-5">
@@ -234,6 +237,72 @@ function ExportPanel({ months, activeId }) {
       <p className="text-xs text-slate-500 mt-2">
         File xuất có đầy đủ các sheet: mỗi danh mục + sheet Nợ + sheet Tổng hợp — giống file gốc.
       </p>
+    </div>
+}
+
+function CarryDebtPanel({ months, activeId, onImported }) {
+  const [sourceId, setSourceId] = useState('');
+  const [targetId, setTargetId] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  useEffect(() => {
+    if (activeId) setTargetId(activeId);
+  }, [activeId]);
+
+  async function handleCarryDebt() {
+    if (!sourceId || !targetId) {
+      setMsg('Vui lòng chọn đủ tháng nguồn và đích');
+      return;
+    }
+    if (sourceId === targetId) {
+      setMsg('Tháng nguồn và đích phải khác nhau');
+      return;
+    }
+    setBusy(true); setMsg('');
+    try {
+      const res = await fetch('/api/debts/carry-over', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceId, targetId })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Lỗi kết chuyển');
+      setMsg(`✓ Đã kết chuyển ${data.count} khoản nợ`);
+      if (onImported) onImported();
+    } catch(e) {
+      setMsg('❌ ' + e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-4">
+      <h3 className="font-semibold text-brand-700 mb-2">Kết chuyển Nợ</h3>
+      <p className="text-xs text-slate-500 mb-3">Chép nợ (chưa trả hết) từ tháng cũ sang.</p>
+      
+      <div className="flex gap-2 mb-3">
+        <label className="flex-1">
+          <span className="block text-xs text-slate-500 mb-1">Từ tháng:</span>
+          <select value={sourceId} onChange={e => setSourceId(e.target.value)} className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm">
+            <option value="">— Chọn —</option>
+            {months.map(m => <option key={m._id} value={m._id}>{m.label}</option>)}
+          </select>
+        </label>
+        <label className="flex-1">
+          <span className="block text-xs text-slate-500 mb-1">Sang tháng:</span>
+          <select value={targetId} onChange={e => setTargetId(e.target.value)} className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm">
+            <option value="">— Chọn —</option>
+            {months.map(m => <option key={m._id} value={m._id}>{m.label}</option>)}
+          </select>
+        </label>
+      </div>
+
+      <button className="btn w-full justify-center" onClick={handleCarryDebt} disabled={busy}>
+        {busy ? 'Đang chuyển...' : 'Bắt đầu chuyển'}
+      </button>
+      {msg && <div className="mt-2 text-sm font-medium">{msg}</div>}
     </div>
   );
 }

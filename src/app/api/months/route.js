@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import Month from '@/models/Month';
 import Product from '@/models/Product';
+import Debt from '@/models/Debt';
 
 export async function GET() {
   await connectDB();
@@ -52,6 +53,23 @@ export async function POST(req) {
     })).filter(p => p.sl > 0); // chỉ giữ lại sản phẩm có số lượng > 0
 
     if (docs.length) await Product.insertMany(docs);
+
+    const carryFromMonth = await Month.findById(carryFromId);
+    const srcDebts = await Debt.find({ monthId: carryFromId }).lean();
+    let currentOrder = 0;
+    const debtDocs = srcDebts.map(d => {
+      const conNo = (d.soTien || 0) - (d.daThanhToan || 0);
+      return {
+        monthId: newMonth._id,
+        order: ++currentOrder,
+        khach: d.khach,
+        soTien: Math.round(conNo * 100) / 100,
+        daThanhToan: 0,
+        noTu: d.noTu || (carryFromMonth ? carryFromMonth.label : ''),
+        dienGiai: d.dienGiai
+      };
+    }).filter(d => d.soTien > 0);
+    if (debtDocs.length) await Debt.insertMany(debtDocs);
   }
 
   return NextResponse.json(newMonth);
