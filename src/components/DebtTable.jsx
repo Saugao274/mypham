@@ -57,8 +57,8 @@ export default function DebtTable({ monthId, debts, loading, onChanged }) {
               <tr className="bg-amber-50/40">
                 <td>➕</td>
                 <td><input autoFocus className="cell-input" value={newRow.khach} onChange={e => setNewRow({ ...newRow, khach: e.target.value })} placeholder="Tên khách" /></td>
-                <td><input type="number" className="cell-input cell-input-num" value={newRow.soTien} onChange={e => setNewRow({ ...newRow, soTien: Number(e.target.value || 0) })} /></td>
-                <td><input type="number" className="cell-input cell-input-num" value={newRow.daThanhToan} onChange={e => setNewRow({ ...newRow, daThanhToan: Number(e.target.value || 0) })} /></td>
+                <NumCell value={newRow.soTien} onChange={v => setNewRow({ ...newRow, soTien: v })} />
+                <NumCell value={newRow.daThanhToan} onChange={v => setNewRow({ ...newRow, daThanhToan: v })} />
                 <td className="text-right bg-slate-50 text-slate-500">{fmt(round2((newRow.soTien || 0) - (newRow.daThanhToan || 0)))}</td>
                 <td><input className="cell-input" value={newRow.noTu} onChange={e => setNewRow({ ...newRow, noTu: e.target.value })} placeholder="mm/yy" /></td>
                 <td><input className="cell-input" value={newRow.dienGiai} onChange={e => setNewRow({ ...newRow, dienGiai: e.target.value })} /></td>
@@ -128,12 +128,51 @@ function DebtRow({ debt, index, onChanged }) {
     <tr>
       <td className="text-slate-400 text-center">{index}</td>
       <td><input className="cell-input" value={local.khach} onChange={e => upd('khach', e.target.value)} /></td>
-      <td><input type="number" className="cell-input cell-input-num" value={local.soTien ?? 0} onChange={e => upd('soTien', Number(e.target.value || 0))} /></td>
-      <td><input type="number" className="cell-input cell-input-num" value={local.daThanhToan ?? 0} onChange={e => upd('daThanhToan', Number(e.target.value || 0))} /></td>
+      <NumCell value={local.soTien ?? 0} onChange={v => upd('soTien', v)} />
+      <NumCell value={local.daThanhToan ?? 0} onChange={v => upd('daThanhToan', v)} />
       <td className={`text-right bg-slate-50 font-medium ${conNo > 0 ? 'text-red-600' : 'text-green-700'}`}>{fmt(conNo)}</td>
       <td><input className="cell-input" value={local.noTu || ''} onChange={e => upd('noTu', e.target.value)} /></td>
       <td><input className="cell-input" value={local.dienGiai || ''} onChange={e => upd('dienGiai', e.target.value)} /></td>
       <td><button className="text-slate-400 hover:text-red-600" onClick={del}>✕</button></td>
     </tr>
+  );
+}
+
+function NumCell({ value, onChange }) {
+  const [text, setText] = useState(value === null || value === undefined ? '' : String(value));
+  const isFocused = useRef(false);
+
+  useEffect(() => {
+    if (!isFocused.current) {
+      setText(value === null || value === undefined ? '' : String(value));
+    }
+  }, [value]);
+
+  return (
+    <td>
+      <input
+        type="number"
+        step="any"
+        value={text}
+        onFocus={e => {
+          isFocused.current = true;
+          e.target.select();
+        }}
+        onChange={e => {
+          const val = e.target.value;
+          setText(val);
+          onChange(val === '' ? 0 : Number(val));
+        }}
+        onBlur={() => {
+          isFocused.current = false;
+          if (text === '') {
+            setText(value === null || value === undefined ? '' : String(value));
+          } else {
+            setText(String(Number(text) || 0));
+          }
+        }}
+        className="cell-input cell-input-num"
+      />
+    </td>
   );
 }

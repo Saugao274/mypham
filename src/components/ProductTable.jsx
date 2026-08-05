@@ -451,13 +451,38 @@ function EditableRow({ index, product, showLoai, showCalculated, onChanged, onRo
 }
 
 function NumInput({ value, onChange, placeholder }) {
+  const [text, setText] = useState(value === null || value === undefined ? '' : String(value));
+  const isFocused = useRef(false);
+
+  useEffect(() => {
+    if (!isFocused.current) {
+      setText(value === null || value === undefined ? '' : String(value));
+    }
+  }, [value]);
+
   return (
     <td>
       <input
         type="number"
         step="any"
-        value={value ?? ''}
-        onChange={e => onChange(e.target.value === '' ? 0 : Number(e.target.value))}
+        value={text}
+        onFocus={e => {
+          isFocused.current = true;
+          e.target.select();
+        }}
+        onChange={e => {
+          const val = e.target.value;
+          setText(val);
+          onChange(val === '' ? 0 : Number(val));
+        }}
+        onBlur={() => {
+          isFocused.current = false;
+          if (text === '') {
+            setText(value === null || value === undefined ? '' : String(value));
+          } else {
+            setText(String(Number(text) || 0));
+          }
+        }}
         placeholder={placeholder}
         className="cell-input cell-input-num"
       />
@@ -480,6 +505,7 @@ function AutoTextArea({ value, onChange, placeholder, className = "", autoFocus 
       ref={ref}
       value={value || ''}
       onChange={e => onChange(e.target.value)}
+      onFocus={e => e.target.select()}
       placeholder={placeholder}
       className={`cell-input resize-none overflow-hidden min-h-[32px] leading-[1.3] ${className}`}
       rows={1}
@@ -487,14 +513,40 @@ function AutoTextArea({ value, onChange, placeholder, className = "", autoFocus 
     />
   );
 }
+
 function NumCell({ value, onChange }) {
+  const [text, setText] = useState(value === null || value === undefined ? '' : String(value));
+  const isFocused = useRef(false);
+
+  useEffect(() => {
+    if (!isFocused.current) {
+      setText(value === null || value === undefined ? '' : String(value));
+    }
+  }, [value]);
+
   return (
     <td className="text-right">
       <input
         type="number"
         step="any"
-        value={value ?? 0}
-        onChange={e => onChange(e.target.value === '' ? 0 : Number(e.target.value))}
+        value={text}
+        onFocus={e => {
+          isFocused.current = true;
+          e.target.select();
+        }}
+        onChange={e => {
+          const val = e.target.value;
+          setText(val);
+          onChange(val === '' ? 0 : Number(val));
+        }}
+        onBlur={() => {
+          isFocused.current = false;
+          if (text === '') {
+            setText(value === null || value === undefined ? '' : String(value));
+          } else {
+            setText(String(Number(text) || 0));
+          }
+        }}
         className="cell-input cell-input-num"
       />
     </td>
