@@ -113,6 +113,22 @@ export default function ProductTable({ monthId, category, items, loading, onChan
   const [sortConfig, setSortConfig] = useState({ key: null, dir: 'asc' });
   const [filters, setFilters] = useState({});
   const [showCalculated, setShowCalculated] = useState(false);
+  const [hideExtra, setHideExtra] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('MYPHAM_HIDE_EXTRA_COLS');
+    if (saved !== null) {
+      setHideExtra(saved === 'true');
+    }
+  }, []);
+
+  const toggleHideExtra = () => {
+    setHideExtra(prev => {
+      const next = !prev;
+      localStorage.setItem('MYPHAM_HIDE_EXTRA_COLS', String(next));
+      return next;
+    });
+  };
 
   function makeEmpty() {
     return {
@@ -192,6 +208,7 @@ export default function ProductTable({ monthId, category, items, loading, onChan
   }, { tongVon: 0, vonCon: 0, tongBan: 0, tongLai: 0, tongChi: 0 });
 
   const showLoai = category?.hasLoaiHang;
+  const totalCols = (showLoai ? 1 : 0) + (showCalculated ? 5 : 0) + (hideExtra ? 0 : 4) + 10;
 
   function renderTh(k, label, className = '') {
     return (
@@ -219,15 +236,31 @@ export default function ProductTable({ monthId, category, items, loading, onChan
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-      <div className="flex items-center justify-between p-3 border-b border-slate-100">
+      <div className="flex items-center justify-between p-3 border-b border-slate-100 flex-wrap gap-2">
         <div>
           <h2 className="text-lg font-semibold text-brand-700">{category.name}</h2>
           <p className="text-xs text-slate-500">{items.length} sản phẩm · Bấm vào tiêu đề cột để sắp xếp</p>
         </div>
-        <div className="flex gap-2"><button className="btn-ghost text-xs py-1 px-2" onClick={() => setShowCalculated(v => !v)}>{showCalculated ? "Ẩn cột tính toán" : "Hiện cột tính toán"}</button>
-        <button className="btn" onClick={() => setAdding(v => !v)}>
-          {adding ? 'Đóng' : '+ Thêm sản phẩm'}
-        </button></div></div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            className={`text-xs py-1 px-2.5 rounded-md border font-medium transition-all ${
+              hideExtra
+                ? 'bg-amber-500 text-white border-amber-600 shadow-sm hover:bg-amber-600'
+                : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+            }`}
+            onClick={toggleHideExtra}
+            title="Ẩn/hiện các cột: Báo động, Diễn giải, Giảm/cước, Nhập"
+          >
+            {hideExtra ? '👁️ Hiện lại cột phụ' : '🕶️ Ẩn cột phụ (Báo động, Diễn giải...)'}
+          </button>
+          <button className="btn-ghost text-xs py-1 px-2" onClick={() => setShowCalculated(v => !v)}>
+            {showCalculated ? "Ẩn cột tính toán" : "Hiện cột tính toán"}
+          </button>
+          <button className="btn text-xs py-1 px-3" onClick={() => setAdding(v => !v)}>
+            {adding ? 'Đóng' : '+ Thêm sản phẩm'}
+          </button>
+        </div>
+      </div>
 
       <div className="scroll-x">
         <table className="tbl text-sm">
@@ -248,10 +281,10 @@ export default function ProductTable({ monthId, category, items, loading, onChan
               {renderTh('slChi', 'SL chi', 'text-right min-w-[70px]')}
               {showCalculated && <th className="text-right bg-slate-50 min-w-[90px]">Tổng chi</th>}
               {renderTh('date', 'Date', 'min-w-[80px]')}
-              {renderTh('baoDongMonths', 'Báo động', 'text-center min-w-[70px] text-[11px] leading-tight')}
-              {renderTh('dienGiai', 'Diễn giải', 'min-w-[160px]')}
-              {renderTh('giamCuoc', 'Giảm/cước', 'text-right min-w-[80px]')}
-              {renderTh('nhap', 'Nhập', 'min-w-[100px]')}
+              {!hideExtra && renderTh('baoDongMonths', 'Báo động', 'text-center min-w-[70px] text-[11px] leading-tight')}
+              {!hideExtra && renderTh('dienGiai', 'Diễn giải', 'min-w-[160px]')}
+              {!hideExtra && renderTh('giamCuoc', 'Giảm/cước', 'text-right min-w-[80px]')}
+              {!hideExtra && renderTh('nhap', 'Nhập', 'min-w-[100px]')}
               <th></th>
             </tr>
             <tr className="bg-slate-50/50">
@@ -270,22 +303,22 @@ export default function ProductTable({ monthId, category, items, loading, onChan
               <td className="px-1 py-1">{renderFilter('slChi')}</td>
               {showCalculated && <td className="bg-slate-50"></td>}
               <td className="px-1 py-1">{renderFilter('date')}</td>
-              <td></td>
-              <td className="px-1 py-1">{renderFilter('dienGiai')}</td>
-              <td className="px-1 py-1">{renderFilter('giamCuoc')}</td>
-              <td className="px-1 py-1">{renderFilter('nhap')}</td>
+              {!hideExtra && <td></td>}
+              {!hideExtra && <td className="px-1 py-1">{renderFilter('dienGiai')}</td>}
+              {!hideExtra && <td className="px-1 py-1">{renderFilter('giamCuoc')}</td>}
+              {!hideExtra && <td className="px-1 py-1">{renderFilter('nhap')}</td>}
               <td></td>
             </tr>
           </thead>
           <tbody>
             {adding && (
-              <NewRow items={items} row={newRow} setRow={setNewRow} showLoai={showLoai} showCalculated={showCalculated} onSave={saveNew} onCancel={() => { setAdding(false); setNewRow(makeEmpty()); }} />
+              <NewRow items={items} row={newRow} setRow={setNewRow} showLoai={showLoai} showCalculated={showCalculated} hideExtra={hideExtra} totalCols={totalCols} onSave={saveNew} onCancel={() => { setAdding(false); setNewRow(makeEmpty()); }} />
             )}
             {processedItems.map((p) => (
-              <EditableRow key={p._id} index={p._originalIndex} product={p} showLoai={showLoai} showCalculated={showCalculated} onChanged={onChanged} onRowChange={onRowChange} />
+              <EditableRow key={p._id} index={p._originalIndex} product={p} showLoai={showLoai} showCalculated={showCalculated} hideExtra={hideExtra} onChanged={onChanged} onRowChange={onRowChange} />
             ))}
             {!processedItems.length && !adding && (
-              <tr><td colSpan={showLoai ? (showCalculated ? 20 : 15) : (showCalculated ? 19 : 14)} className="text-center text-slate-400 py-6">
+              <tr><td colSpan={totalCols} className="text-center text-slate-400 py-6">
                 {loading ? 'Đang tải…' : 'Không có dữ liệu'}
               </td></tr>
             )}
@@ -303,7 +336,7 @@ export default function ProductTable({ monthId, category, items, loading, onChan
                 {showCalculated && <td className="text-right text-green-700">{fmt(totals.tongLai)}</td>}
                 <td></td>
                 {showCalculated && <td className="text-right text-red-700">{fmt(totals.tongChi)}</td>}
-                <td colSpan={6}></td>
+                <td colSpan={hideExtra ? 2 : 6}></td>
               </tr>
             </tfoot>
           )}
@@ -313,7 +346,7 @@ export default function ProductTable({ monthId, category, items, loading, onChan
   );
 }
 
-function NewRow({ items, row, setRow, showLoai, showCalculated, onSave, onCancel }) {
+function NewRow({ items, row, setRow, showLoai, showCalculated, hideExtra, totalCols, onSave, onCancel }) {
   const trRef = useRef(null);
 
   useEffect(() => {
@@ -370,10 +403,10 @@ function NewRow({ items, row, setRow, showLoai, showCalculated, onSave, onCancel
         <NumInput value={row.slChi} onChange={v => upd('slChi', v)} />
         {showCalculated && <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.slChi || 0) * (row.giaMua || 0)))}</td>}
         <td><input className="cell-input text-center" value={row.date} onChange={e => upd('date', e.target.value)} placeholder="mm/yy" /></td>
-        <NumInput value={row.baoDongMonths} onChange={v => upd('baoDongMonths', v)} />
-        <td><AutoTextArea value={row.dienGiai} onChange={v => upd('dienGiai', v)} /></td>
-        <NumInput value={row.giamCuoc} onChange={v => upd('giamCuoc', v)} />
-        <td><AutoTextArea value={row.nhap} onChange={v => upd('nhap', v)} /></td>
+        {!hideExtra && <NumInput value={row.baoDongMonths} onChange={v => upd('baoDongMonths', v)} />}
+        {!hideExtra && <td><AutoTextArea value={row.dienGiai} onChange={v => upd('dienGiai', v)} /></td>}
+        {!hideExtra && <NumInput value={row.giamCuoc} onChange={v => upd('giamCuoc', v)} />}
+        {!hideExtra && <td><AutoTextArea value={row.nhap} onChange={v => upd('nhap', v)} /></td>}
         <td>
           <div className="flex gap-1 justify-center">
             <button className="text-green-600 hover:text-green-800 font-bold px-1" onClick={onSave} title="Lưu">✓</button>
@@ -383,7 +416,7 @@ function NewRow({ items, row, setRow, showLoai, showCalculated, onSave, onCancel
       </tr>
       {duplicateMatches.length > 0 && (
         <tr className="bg-amber-100/90 border-b border-amber-300 text-amber-900 text-xs">
-          <td colSpan={showLoai ? (showCalculated ? 20 : 15) : (showCalculated ? 19 : 14)} className="py-2 px-3">
+          <td colSpan={totalCols} className="py-2 px-3">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-base">⚠️</span>
               <span className="font-semibold">Đã có sản phẩm này trong danh sách:</span>
@@ -401,7 +434,7 @@ function NewRow({ items, row, setRow, showLoai, showCalculated, onSave, onCancel
   );
 }
 
-function EditableRow({ index, product, showLoai, showCalculated, onChanged, onRowChange }) {
+function EditableRow({ index, product, showLoai, showCalculated, hideExtra, onChanged, onRowChange }) {
   const [local, setLocal] = useState(product);
   useEffect(() => { setLocal(product); }, [product._id, product.updatedAt]);
   const savingRef = useRef(null);
@@ -470,10 +503,10 @@ function EditableRow({ index, product, showLoai, showCalculated, onChanged, onRo
       <NumCell value={local.slChi} onChange={v => upd('slChi', v)} />
       {showCalculated && <td className="text-right bg-slate-50 text-red-600">{fmt(derived.tongChi)}</td>}
       <td className="p-1"><input className={dateClass} value={local.date || ''} onChange={e => upd('date', e.target.value)} title={remain !== null ? `Còn ${remain} tháng` : ''} /></td>
-      <NumCell value={local.baoDongMonths ?? 12} onChange={v => upd('baoDongMonths', v)} />
-      <td><AutoTextArea value={local.dienGiai || ''} onChange={v => upd('dienGiai', v)} /></td>
-      <NumCell value={local.giamCuoc} onChange={v => upd('giamCuoc', v)} />
-      <td><AutoTextArea value={local.nhap || ''} onChange={v => upd('nhap', v)} /></td>
+      {!hideExtra && <NumCell value={local.baoDongMonths ?? 12} onChange={v => upd('baoDongMonths', v)} />}
+      {!hideExtra && <td><AutoTextArea value={local.dienGiai || ''} onChange={v => upd('dienGiai', v)} /></td>}
+      {!hideExtra && <NumCell value={local.giamCuoc} onChange={v => upd('giamCuoc', v)} />}
+      {!hideExtra && <td><AutoTextArea value={local.nhap || ''} onChange={v => upd('nhap', v)} /></td>}
       <td className="text-center">
         <button onClick={del} className="text-slate-400 hover:text-red-600 p-1" title="Xoá">✕</button>
       </td>

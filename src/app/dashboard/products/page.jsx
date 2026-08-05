@@ -194,7 +194,10 @@ export default function ProductsPage() {
           onClose={() => { setScannerOpen(false); setDroppedFile(null); }}
           monthId={monthId}
           currentCategoryKey={activeCat}
-          onImportSuccess={loadProducts}
+          onImportSuccess={(newCatKey) => {
+            loadProducts();
+            if (newCatKey) setActiveCat(newCatKey);
+          }}
           initialImageFile={droppedFile}
         />
       )}

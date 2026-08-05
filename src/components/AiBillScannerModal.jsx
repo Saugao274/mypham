@@ -58,18 +58,25 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
 
   if (!isOpen) return null;
 
-  function processFileAndAutoScan(file) {
+  async function processFileAndAutoScan(file) {
     if (!file) return;
     setImageFile(file);
     setErrorMsg('');
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64 = e.target.result;
-      setImagePreview(base64);
+    try {
+      const compressed = await compressImageFile(file);
+      if (!compressed) return;
+      setImagePreview(compressed.dataUrl);
       // Auto trigger scan for instant speed
-      triggerScan(base64, file.type || 'image/jpeg');
-    };
-    reader.readAsDataURL(file);
+      triggerScan(compressed.dataUrl, compressed.mimeType);
+    } catch (err) {
+      console.error(err);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+        triggerScan(e.target.result, file.type || 'image/jpeg');
+      };
+      reader.readAsDataURL(file);
+    }
   }
 
   function handleDragOver(e) {
@@ -115,6 +122,12 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
         }),
       });
 
+      if (res.status === 401) {
+        setErrorMsg('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        setScanning(false);
+        return;
+      }
+
       const data = await res.json();
       if (!res.ok) {
         if (data.error === 'NEED_API_KEY' || data.error === 'INVALID_API_KEY') {
@@ -131,7 +144,8 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
         localStorage.setItem('GEMINI_API_KEY', activeKey);
       }
 
-      setSupplier(data.supplier || '');
+      const defaultSupplier = (data.supplier || '').trim();
+      setSupplier(defaultSupplier);
       const parsedItems = (data.items || []).map((it, idx) => ({
         id: idx + 1,
         selected: true,
@@ -140,7 +154,7 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
         giaMua: Number(it.giaMua) || 0,
         categoryKey: it.categoryKey || currentCategoryKey || 'tap_hoa',
         loaiHang: it.loaiHang || '',
-        nhap: it.nhap || data.supplier || '',
+        nhap: (it.nhap || defaultSupplier || '').trim(),
         dienGiai: it.dienGiai || '',
       }));
 
@@ -172,22 +186,25 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
 
     setSaving(true);
     try {
-      const payload = selectedItems.map(it => ({
-        monthId,
-        categoryKey: it.categoryKey,
-        ten: it.ten.trim(),
-        loaiHang: it.loaiHang.trim(),
-        sl: it.sl,
-        slCon: it.sl,
-        giaMua: it.giaMua,
-        giaBan: 0,
-        slBan: 0,
-        slChi: 0,
-        date: '',
-        baoDongMonths: 12,
-        nhap: it.nhap.trim() || supplier.trim(),
-        dienGiai: it.dienGiai.trim(),
-      }));
+      const payload = selectedItems.map(it => {
+        const itemNhap = (it.nhap || '').trim() || (supplier || '').trim();
+        return {
+          monthId,
+          categoryKey: it.categoryKey || currentCategoryKey || 'tap_hoa',
+          ten: it.ten.trim(),
+          loaiHang: (it.loaiHang || '').trim(),
+          sl: Number(it.sl) || 1,
+          slCon: Number(it.sl) || 1,
+          giaMua: Number(it.giaMua) || 0,
+          giaBan: 0,
+          slBan: 0,
+          slChi: 0,
+          date: '',
+          baoDongMonths: 12,
+          nhap: itemNhap,
+          dienGiai: (it.dienGiai || '').trim(),
+        };
+      });
 
       const res = await fetch('/api/products', {
         method: 'POST',
@@ -195,14 +212,21 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
         body: JSON.stringify({ monthId, items: payload }),
       });
 
+      if (res.status === 401) {
+        alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        window.location.href = '/login';
+        return;
+      }
+
       if (!res.ok) throw new Error('Không thể lưu sản phẩm');
 
       if (apiKey) {
         localStorage.setItem('GEMINI_API_KEY', apiKey.trim());
       }
 
-      alert(`Đã thêm thành công ${payload.length} sản phẩm vào bảng!`);
-      onImportSuccess();
+      const firstCatKey = payload[0]?.categoryKey;
+      alert(`Đã thêm thành công ${payload.length} sản phẩm vào bảng! Cột Nơi nhập đã được lưu đầy đủ.`);
+      if (onImportSuccess) onImportSuccess(firstCatKey);
       onClose();
     } catch (err) {
       alert('Lỗi lưu dữ liệu: ' + err.message);
@@ -510,4 +534,39 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
       </div>
     </div>
   );
+}
+
+function compressImageFile(file, maxDim = 1600, quality = 0.85) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve({ dataUrl, mimeType: 'image/jpeg' });
+      };
+      img.onerror = () => {
+        resolve({ dataUrl: e.target.result, mimeType: file.type || 'image/jpeg' });
+      };
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
 }
