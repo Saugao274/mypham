@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import Debt from '@/models/Debt';
+import { logActivity } from '@/lib/activityLogger';
 
 export async function GET(req) {
   await connectDB();
@@ -20,5 +21,14 @@ export async function POST(req) {
   const last = await Debt.findOne({ monthId: body.monthId }).sort({ order: -1 });
   const order = (last?.order || 0) + 1;
   const d = await Debt.create({ ...body, order });
+
+  await logActivity({
+    monthId: body.monthId,
+    action: 'CREATE_DEBT',
+    targetName: d.khach,
+    details: `Thêm khoản nợ khách "${d.khach}" (Số tiền: ${d.soTien || 0}, Đã thanh toán: ${d.daThanhToan || 0})`,
+  });
+
   return NextResponse.json(d.toJSON());
 }
+

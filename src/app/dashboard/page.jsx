@@ -28,6 +28,16 @@ export default function DashboardPage() {
 
   const currentLabel = months.find(m => m._id === monthId)?.label || '';
 
+  const [recentLogs, setRecentLogs] = useState([]);
+
+  useEffect(() => {
+    if (monthId) {
+      fetch(`/api/history?monthId=${monthId}&limit=5`).then(r => r.json()).then(data => {
+        setRecentLogs(Array.isArray(data) ? data : []);
+      });
+    }
+  }, [monthId]);
+
   return (
     <div className="space-y-4">
       <h1 className="text-xl md:text-2xl font-bold text-slate-800">Tổng hợp — {currentLabel}</h1>
@@ -115,6 +125,33 @@ export default function DashboardPage() {
           </table>
         </div>
       </div>
+
+      {/* Recent Activity */}
+      {recentLogs.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-slate-800 flex items-center gap-1.5 text-sm">
+              <span>🕒</span> Hoạt động chỉnh sửa gần đây
+            </h2>
+            <a href="/dashboard/history" className="text-xs text-brand-600 font-medium hover:underline">
+              Xem toàn bộ lịch sử ↗
+            </a>
+          </div>
+          <div className="space-y-2">
+            {recentLogs.map(log => (
+              <div key={log._id} className="text-xs p-2.5 bg-slate-50 rounded-lg flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 truncate">
+                  <span className="font-bold text-slate-700">{log.targetName || 'Sản phẩm/Nợ'}</span>
+                  <span className="text-slate-500 truncate">{log.details}</span>
+                </div>
+                <span className="text-[11px] text-slate-400 shrink-0">
+                  {new Date(log.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

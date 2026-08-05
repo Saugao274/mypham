@@ -21,6 +21,7 @@ export default function DashboardLayout({ children }) {
     { href: '/dashboard', label: 'Tổng hợp' },
     { href: '/dashboard/products', label: 'Sản phẩm' },
     { href: '/dashboard/debts', label: 'Nợ' },
+    { href: '/dashboard/history', label: 'Lịch sử' },
     { href: '/dashboard/manage', label: 'Tháng / Nhập / Xuất' },
   ];
 

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useCurrentMonth } from '@/lib/useCurrentMonth';
 import ProductTable from '@/components/ProductTable';
+import AiBillScannerModal from '@/components/AiBillScannerModal';
 
 export default function ProductsPage() {
   const { monthId, months, reload } = useCurrentMonth();
@@ -9,6 +10,7 @@ export default function ProductsPage() {
   const [activeCat, setActiveCat] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   useEffect(() => { reload(); }, []);
   useEffect(() => {
@@ -39,6 +41,22 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-4">
+      {/* Action Bar with AI Scanner */}
+      <div className="flex items-center justify-between flex-wrap gap-2 bg-white border border-slate-200 p-2.5 rounded-xl">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-slate-700">📦 Quản lý sản phẩm</span>
+          <span className="text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full font-medium">
+            {products.length} tổng SP
+          </span>
+        </div>
+        <button
+          onClick={() => setScannerOpen(true)}
+          className="btn !bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 !text-white font-bold py-1.5 px-3.5 rounded-lg shadow hover:shadow-md flex items-center gap-1.5 text-xs transition-all"
+        >
+          <span className="text-base leading-none">📷</span> Quét ảnh đơn hàng (AI)
+        </button>
+      </div>
+
       {/* Category tabs */}
       <div className="overflow-x-auto pb-2 -mx-3 px-3 md:mx-0 md:px-0">
         <div className="flex gap-1.5 min-w-max px-3 md:px-0">
@@ -69,6 +87,14 @@ export default function ProductsPage() {
           }}
         />
       )}
+
+      <AiBillScannerModal
+        isOpen={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        monthId={monthId}
+        currentCategoryKey={activeCat}
+        onImportSuccess={loadProducts}
+      />
     </div>
   );
 }

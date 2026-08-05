@@ -322,6 +322,12 @@ function NewRow({ items, row, setRow, showLoai, showCalculated, onSave, onCancel
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onSave]);
 
+  const duplicateMatches = useMemo(() => {
+    const t = (row.ten || '').trim().toLowerCase();
+    if (!t || t.length < 2) return [];
+    return (items || []).filter(p => (p.ten || '').trim().toLowerCase() === t);
+  }, [row.ten, items]);
+
   const upd = (k, v) => setRow(r => {
     let next = { ...r, [k]: v };
     if (k === 'ten' && v && !r.loaiHang) {
@@ -339,34 +345,55 @@ function NewRow({ items, row, setRow, showLoai, showCalculated, onSave, onCancel
     }
     return next;
   });
+
   return (
-    <tr ref={trRef} className="bg-amber-50/40">
-      <td className="text-center">➕</td>
-      <td><AutoTextArea autoFocus className="font-medium" value={row.ten} onChange={v => upd('ten', v)} placeholder="Tên sản phẩm" /></td>
-      {showLoai && <td><AutoTextArea value={row.loaiHang} onChange={v => upd('loaiHang', v)} /></td>}
-      <NumInput value={row.sl} onChange={v => upd('sl', v)} />
-      <NumInput value={row.giaMua} onChange={v => upd('giaMua', v)} />
-      {showCalculated && <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.sl || 0) * (row.giaMua || 0)))}</td>}
-      <NumInput value={row.slCon} onChange={v => upd('slCon', v)} placeholder={String(row.sl || 0)} />
-      {showCalculated && <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.slCon || 0) * (row.giaMua || 0)))}</td>}
-      <NumInput value={row.giaBan} onChange={v => upd('giaBan', v)} />
-      <NumInput value={row.slBan} onChange={v => upd('slBan', v)} />
-      {showCalculated && <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.slBan || 0) * (row.giaBan || 0)))}</td>}
-      {showCalculated && <td className="text-right text-slate-400 bg-slate-50"></td>}
-      <NumInput value={row.slChi} onChange={v => upd('slChi', v)} />
-      {showCalculated && <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.slChi || 0) * (row.giaMua || 0)))}</td>}
-      <td><input className="cell-input text-center" value={row.date} onChange={e => upd('date', e.target.value)} placeholder="mm/yy" /></td>
-      <NumInput value={row.baoDongMonths} onChange={v => upd('baoDongMonths', v)} />
-      <td><AutoTextArea value={row.dienGiai} onChange={v => upd('dienGiai', v)} /></td>
-      <NumInput value={row.giamCuoc} onChange={v => upd('giamCuoc', v)} />
-      <td><AutoTextArea value={row.nhap} onChange={v => upd('nhap', v)} /></td>
-      <td>
-        <div className="flex gap-1 justify-center">
-          <button className="text-green-600 hover:text-green-800 font-bold px-1" onClick={onSave} title="Lưu">✓</button>
-          <button className="text-slate-500 hover:text-red-600 px-1" onClick={onCancel} title="Huỷ">✕</button>
-        </div>
-      </td>
-    </tr>
+    <>
+      <tr ref={trRef} className="bg-amber-50/40">
+        <td className="text-center">➕</td>
+        <td>
+          <AutoTextArea autoFocus className="font-medium" value={row.ten} onChange={v => upd('ten', v)} placeholder="Tên sản phẩm" />
+        </td>
+        {showLoai && <td><AutoTextArea value={row.loaiHang} onChange={v => upd('loaiHang', v)} /></td>}
+        <NumInput value={row.sl} onChange={v => upd('sl', v)} />
+        <NumInput value={row.giaMua} onChange={v => upd('giaMua', v)} />
+        {showCalculated && <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.sl || 0) * (row.giaMua || 0)))}</td>}
+        <NumInput value={row.slCon} onChange={v => upd('slCon', v)} placeholder={String(row.sl || 0)} />
+        {showCalculated && <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.slCon || 0) * (row.giaMua || 0)))}</td>}
+        <NumInput value={row.giaBan} onChange={v => upd('giaBan', v)} />
+        <NumInput value={row.slBan} onChange={v => upd('slBan', v)} />
+        {showCalculated && <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.slBan || 0) * (row.giaBan || 0)))}</td>}
+        {showCalculated && <td className="text-right text-slate-400 bg-slate-50"></td>}
+        <NumInput value={row.slChi} onChange={v => upd('slChi', v)} />
+        {showCalculated && <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.slChi || 0) * (row.giaMua || 0)))}</td>}
+        <td><input className="cell-input text-center" value={row.date} onChange={e => upd('date', e.target.value)} placeholder="mm/yy" /></td>
+        <NumInput value={row.baoDongMonths} onChange={v => upd('baoDongMonths', v)} />
+        <td><AutoTextArea value={row.dienGiai} onChange={v => upd('dienGiai', v)} /></td>
+        <NumInput value={row.giamCuoc} onChange={v => upd('giamCuoc', v)} />
+        <td><AutoTextArea value={row.nhap} onChange={v => upd('nhap', v)} /></td>
+        <td>
+          <div className="flex gap-1 justify-center">
+            <button className="text-green-600 hover:text-green-800 font-bold px-1" onClick={onSave} title="Lưu">✓</button>
+            <button className="text-slate-500 hover:text-red-600 px-1" onClick={onCancel} title="Huỷ">✕</button>
+          </div>
+        </td>
+      </tr>
+      {duplicateMatches.length > 0 && (
+        <tr className="bg-amber-100/90 border-b border-amber-300 text-amber-900 text-xs">
+          <td colSpan={showLoai ? (showCalculated ? 20 : 15) : (showCalculated ? 19 : 14)} className="py-2 px-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-base">⚠️</span>
+              <span className="font-semibold">Đã có sản phẩm này trong danh sách:</span>
+              {duplicateMatches.map((m, idx) => (
+                <span key={m._id || idx} className="bg-white/90 border border-amber-300 rounded px-2 py-0.5 font-medium shadow-sm">
+                  "{m.ten}" (Giá mua: {fmt(m.giaMua)} · Nơi nhập: {m.nhap || 'Trống'} · SL còn: {m.slCon || 0})
+                </span>
+              ))}
+              <span className="text-amber-800 italic ml-1">(Bạn vẫn có thể tiếp tục nhập nếu khác giá hoặc nơi nhập)</span>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 
