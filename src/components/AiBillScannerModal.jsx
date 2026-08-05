@@ -39,17 +39,22 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
   // Support paste (Ctrl+V) anywhere inside the window when modal is open
   useEffect(() => {
     function handlePaste(e) {
-      if (!isOpen) return;
-      const clipboardItems = e.clipboardData?.items;
-      if (!clipboardItems) return;
-      for (let i = 0; i < clipboardItems.length; i++) {
-        if (clipboardItems[i].type.indexOf('image') !== -1) {
-          const file = clipboardItems[i].getAsFile();
-          if (file) {
-            processFileAndAutoScan(file);
+      try {
+        if (!isOpen) return;
+        const clipboardItems = e.clipboardData?.items;
+        if (!clipboardItems || clipboardItems.length === 0) return;
+        for (let i = 0; i < clipboardItems.length; i++) {
+          const item = clipboardItems[i];
+          if (item && typeof item.type === 'string' && item.type.includes('image')) {
+            const file = item.getAsFile();
+            if (file) {
+              processFileAndAutoScan(file);
+              break;
+            }
           }
-          break;
         }
+      } catch (err) {
+        console.error('Error handling paste in modal:', err);
       }
     }
     window.addEventListener('paste', handlePaste);
@@ -80,29 +85,37 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
   }
 
   function handleDragOver(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
+    try {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(true);
+    } catch (_) {}
   }
 
   function handleDragLeave(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
+    try {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+    } catch (_) {}
   }
 
   function handleDrop(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    const files = e.dataTransfer?.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      if (file.type.startsWith('image/')) {
-        processFileAndAutoScan(file);
-      } else {
-        setErrorMsg('Vui lòng kéo file hình ảnh (PNG, JPG, JPEG, WEBP...)');
+    try {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      const files = e.dataTransfer?.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        if (file && file.type && file.type.startsWith('image/')) {
+          processFileAndAutoScan(file);
+        } else {
+          setErrorMsg('Vui lòng kéo file hình ảnh (PNG, JPG, JPEG, WEBP...)');
+        }
       }
+    } catch (err) {
+      console.error('Error in modal handleDrop:', err);
     }
   }
 

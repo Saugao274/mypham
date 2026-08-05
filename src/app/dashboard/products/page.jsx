@@ -41,37 +41,29 @@ export default function ProductsPage() {
   // Global Paste (Ctrl+V) anywhere on the Products page (only when not typing in text inputs)
   useEffect(() => {
     function handleGlobalPaste(e) {
-      const target = e.target;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
-        // If typing in input, let normal text paste work
+      try {
+        const target = e.target;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+          // If typing in input, let normal text paste work
+          return;
+        }
+
         const items = e.clipboardData?.items;
-        if (items) {
-          for (let i = 0; i < items.length; i++) {
-            if (items[i].type.indexOf('image') !== -1) {
-              const file = items[i].getAsFile();
-              if (file) {
-                e.preventDefault();
-                setDroppedFile(file);
-                setScannerOpen(true);
-                break;
-              }
+        if (!items || items.length === 0) return;
+        for (let i = 0; i < items.length; i++) {
+          const it = items[i];
+          if (it && typeof it.type === 'string' && it.type.includes('image')) {
+            const file = it.getAsFile();
+            if (file) {
+              e.preventDefault();
+              setDroppedFile(file);
+              setScannerOpen(true);
+              break;
             }
           }
         }
-        return;
-      }
-
-      const items = e.clipboardData?.items;
-      if (!items) return;
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf('image') !== -1) {
-          const file = items[i].getAsFile();
-          if (file) {
-            setDroppedFile(file);
-            setScannerOpen(true);
-            break;
-          }
-        }
+      } catch (err) {
+        console.error('Error handling paste:', err);
       }
     }
     window.addEventListener('paste', handleGlobalPaste);
@@ -81,38 +73,53 @@ export default function ProductsPage() {
   // Global drag-and-drop listener on window with robust cleanup
   useEffect(() => {
     function onDragEnter(e) {
-      if (scannerOpen) return;
-      e.preventDefault();
-      if (e.dataTransfer?.types?.includes('Files')) {
-        dragCounter.current += 1;
-        setIsPageDragging(true);
+      try {
+        if (scannerOpen) return;
+        e.preventDefault();
+        const types = e.dataTransfer?.types ? Array.from(e.dataTransfer.types) : [];
+        if (types.includes('Files')) {
+          dragCounter.current += 1;
+          setIsPageDragging(true);
+        }
+      } catch (err) {
+        console.error('Error onDragEnter:', err);
       }
     }
     function onDragOver(e) {
-      if (scannerOpen) return;
-      e.preventDefault();
+      try {
+        if (scannerOpen) return;
+        e.preventDefault();
+      } catch (_) {}
     }
     function onDragLeave(e) {
-      if (scannerOpen) return;
-      e.preventDefault();
-      dragCounter.current -= 1;
-      if (dragCounter.current <= 0) {
-        dragCounter.current = 0;
-        setIsPageDragging(false);
+      try {
+        if (scannerOpen) return;
+        e.preventDefault();
+        dragCounter.current -= 1;
+        if (dragCounter.current <= 0) {
+          dragCounter.current = 0;
+          setIsPageDragging(false);
+        }
+      } catch (err) {
+        console.error('Error onDragLeave:', err);
       }
     }
     function onDrop(e) {
-      if (scannerOpen) return;
-      e.preventDefault();
-      dragCounter.current = 0;
-      setIsPageDragging(false);
-      const files = e.dataTransfer?.files;
-      if (files && files.length > 0) {
-        const file = files[0];
-        if (file.type && file.type.startsWith('image/')) {
-          setDroppedFile(file);
-          setScannerOpen(true);
+      try {
+        if (scannerOpen) return;
+        e.preventDefault();
+        dragCounter.current = 0;
+        setIsPageDragging(false);
+        const files = e.dataTransfer?.files;
+        if (files && files.length > 0) {
+          const file = files[0];
+          if (file && file.type && file.type.startsWith('image/')) {
+            setDroppedFile(file);
+            setScannerOpen(true);
+          }
         }
+      } catch (err) {
+        console.error('Error onDrop:', err);
       }
     }
     function resetDragState() {

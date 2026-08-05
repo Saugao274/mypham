@@ -238,8 +238,8 @@ export default function ProductTable({ monthId, category, items, loading, onChan
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
       <div className="flex items-center justify-between p-3 border-b border-slate-100 flex-wrap gap-2">
         <div>
-          <h2 className="text-lg font-semibold text-brand-700">{category.name}</h2>
-          <p className="text-xs text-slate-500">{items.length} sản phẩm · Bấm vào tiêu đề cột để sắp xếp</p>
+          <h2 className="text-lg font-semibold text-brand-700">{category?.name || 'Sản phẩm'}</h2>
+          <p className="text-xs text-slate-500">{(items || []).length} sản phẩm · Bấm vào tiêu đề cột để sắp xếp</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <button
