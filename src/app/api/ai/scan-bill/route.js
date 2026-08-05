@@ -44,7 +44,7 @@ Quy tắc bóc tách dữ liệu:
 4. "categoryKey": Chọn chính xác 1 trong các key danh mục ở danh sách trên (ví dụ: kem_duong, kem_cn, tre_em, st_dg_kdr, tpcn, tap_hoa, makeup_son, srm_tdc, serum_xk).
 5. "loaiHang": Gợi ý viết tắt hoặc tên loại hàng (ví dụ: "TDC", "KCN", "TPCN", "Sâm", "KDR", "Son", "SRM", "Serum", "Tóc", "Cơ thể"...).
 6. "nhap": Nơi nhập / mã đơn / mã nhà cung cấp nếu có trên ảnh (ví dụ: "SON12745" từ tiêu đề), nếu không có thì để rỗng "".
-7. "dienGiai": Ghi chú thêm nếu có (hoặc mã SKU).
+7. "dienGiai": Luôn để rỗng "" (tuyệt đối không điền SKU hay mã hàng vào đây vì cột này dùng để ghi tên người mua hàng sau này).
 
 BẮT BUỘC: Trả về kết quả ĐÚNG định dạng JSON sau (không kèm văn bản giải thích nào khác ngoài JSON):
 {
@@ -57,7 +57,7 @@ BẮT BUỘC: Trả về kết quả ĐÚNG định dạng JSON sau (không kèm
       "categoryKey": "srm_tdc",
       "loaiHang": "TDC",
       "nhap": "SON12745",
-      "dienGiai": "SKU: PVN2414"
+      "dienGiai": ""
     }
   ]
 }
@@ -130,6 +130,7 @@ BẮT BUỘC: Trả về kết quả ĐÚNG định dạng JSON sau (không kèm
         return {
           ...it,
           giaMua: gia,
+          dienGiai: '', // Diễn giải là tên người mua, không lưu SKU/ghi chú từ bill
         };
       });
     }

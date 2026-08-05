@@ -78,40 +78,73 @@ export default function ProductsPage() {
     return () => window.removeEventListener('paste', handleGlobalPaste);
   }, []);
 
-  function handlePageDragEnter(e) {
-    e.preventDefault();
-    dragCounter.current += 1;
-    if (e.dataTransfer?.items && e.dataTransfer.items.length > 0) {
-      setIsPageDragging(true);
+  // Global drag-and-drop listener on window with robust cleanup
+  useEffect(() => {
+    function onDragEnter(e) {
+      if (scannerOpen) return;
+      e.preventDefault();
+      if (e.dataTransfer?.types?.includes('Files')) {
+        dragCounter.current += 1;
+        setIsPageDragging(true);
+      }
     }
-  }
-
-  function handlePageDragOver(e) {
-    e.preventDefault();
-  }
-
-  function handlePageDragLeave(e) {
-    e.preventDefault();
-    dragCounter.current -= 1;
-    if (dragCounter.current <= 0) {
+    function onDragOver(e) {
+      if (scannerOpen) return;
+      e.preventDefault();
+    }
+    function onDragLeave(e) {
+      if (scannerOpen) return;
+      e.preventDefault();
+      dragCounter.current -= 1;
+      if (dragCounter.current <= 0) {
+        dragCounter.current = 0;
+        setIsPageDragging(false);
+      }
+    }
+    function onDrop(e) {
+      if (scannerOpen) return;
+      e.preventDefault();
+      dragCounter.current = 0;
+      setIsPageDragging(false);
+      const files = e.dataTransfer?.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        if (file.type && file.type.startsWith('image/')) {
+          setDroppedFile(file);
+          setScannerOpen(true);
+        }
+      }
+    }
+    function resetDragState() {
       dragCounter.current = 0;
       setIsPageDragging(false);
     }
-  }
-
-  function handlePageDrop(e) {
-    e.preventDefault();
-    dragCounter.current = 0;
-    setIsPageDragging(false);
-    const files = e.dataTransfer?.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      if (file.type && file.type.startsWith('image/')) {
-        setDroppedFile(file);
-        setScannerOpen(true);
+    function onKeyDown(e) {
+      if (e.key === 'Escape') {
+        resetDragState();
       }
     }
-  }
+
+    window.addEventListener('dragenter', onDragEnter);
+    window.addEventListener('dragover', onDragOver);
+    window.addEventListener('dragleave', onDragLeave);
+    window.addEventListener('drop', onDrop);
+    window.addEventListener('dragend', resetDragState);
+    window.addEventListener('blur', resetDragState);
+    window.addEventListener('mouseup', resetDragState);
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      window.removeEventListener('dragenter', onDragEnter);
+      window.removeEventListener('dragover', onDragOver);
+      window.removeEventListener('dragleave', onDragLeave);
+      window.removeEventListener('drop', onDrop);
+      window.removeEventListener('dragend', resetDragState);
+      window.removeEventListener('blur', resetDragState);
+      window.removeEventListener('mouseup', resetDragState);
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [scannerOpen]);
 
   const cat = categories.find(c => c.key === activeCat) || categories[0];
   const items = products.filter(p => p.categoryKey === activeCat);
@@ -122,19 +155,23 @@ export default function ProductsPage() {
   if (!monthId) return null;
 
   return (
-    <div
-      onDragEnter={handlePageDragEnter}
-      onDragOver={handlePageDragOver}
-      onDragLeave={handlePageDragLeave}
-      onDrop={handlePageDrop}
-      className="space-y-4 relative min-h-[70vh]"
-    >
-      {/* Global Drag Drop Hint */}
-      {isPageDragging && (
-        <div className="fixed inset-0 z-40 bg-brand-700/85 backdrop-blur-sm flex flex-col items-center justify-center text-white border-4 border-dashed border-white m-4 rounded-3xl animate-pulse pointer-events-none">
-          <span className="text-6xl mb-3">📥</span>
+    <div className="space-y-4 relative min-h-[70vh]">
+      {/* Global Drag Drop Hint (Only when modal is closed, click to dismiss) */}
+      {isPageDragging && !scannerOpen && (
+        <div
+          onClick={() => { setIsPageDragging(false); dragCounter.current = 0; }}
+          className="fixed inset-0 z-40 bg-brand-700/90 backdrop-blur-sm flex flex-col items-center justify-center text-white border-4 border-dashed border-white m-4 rounded-3xl cursor-pointer select-none transition-all shadow-2xl"
+        >
+          <button
+            onClick={(e) => { e.stopPropagation(); setIsPageDragging(false); dragCounter.current = 0; }}
+            className="absolute top-4 right-6 text-white/80 hover:text-white text-sm bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full font-bold transition-all"
+          >
+            ✕ Nhấn vào đây hoặc phím Esc để đóng
+          </button>
+          <span className="text-6xl mb-3 animate-bounce">📥</span>
           <span className="text-2xl font-bold">Thả ảnh đơn hàng vào đây</span>
           <span className="text-sm opacity-90 mt-1">AI sẽ tự động đọc Tên SP, Số lượng và Giá mua ngay lập tức!</span>
+          <span className="text-xs opacity-75 mt-3">(Bấm chuột bất kỳ đâu để tắt khung này)</span>
         </div>
       )}
 

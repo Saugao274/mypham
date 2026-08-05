@@ -155,7 +155,7 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
         categoryKey: it.categoryKey || currentCategoryKey || 'tap_hoa',
         loaiHang: it.loaiHang || '',
         nhap: (it.nhap || defaultSupplier || '').trim(),
-        dienGiai: it.dienGiai || '',
+        dienGiai: '',
       }));
 
       setItems(parsedItems);
@@ -202,7 +202,7 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
           date: '',
           baoDongMonths: 12,
           nhap: itemNhap,
-          dienGiai: (it.dienGiai || '').trim(),
+          dienGiai: '', // Diễn giải là tên người mua, không lưu SKU từ đơn hàng
         };
       });
 
