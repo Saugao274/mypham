@@ -8,6 +8,11 @@ export default function HistoryPage() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (monthId && selectedMonth === 'all') {
@@ -60,7 +65,9 @@ export default function HistoryPage() {
 
   function formatTime(dateStr) {
     if (!dateStr) return '';
+    if (!mounted) return '...';
     const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
     const now = new Date();
     const diffMs = now - d;
     const diffMins = Math.floor(diffMs / 60000);

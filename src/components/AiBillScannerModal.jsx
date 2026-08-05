@@ -13,11 +13,21 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
   const [showKeyInput, setShowKeyInput] = useState(false);
   const [saving, setSaving] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [hasServerKey, setHasServerKey] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     const savedKey = localStorage.getItem('GEMINI_API_KEY') || '';
     setApiKey(savedKey);
+
+    fetch('/api/ai/scan-bill')
+      .then(r => r.json())
+      .then(data => {
+        if (data.configured) {
+          setHasServerKey(true);
+        }
+      })
+      .catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -251,7 +261,7 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
           )}
 
           {/* API Key Input */}
-          {(showKeyInput || !apiKey) && (
+          {(showKeyInput || (!apiKey && !hasServerKey)) && (
             <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl text-xs space-y-2 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-amber-900 flex items-center gap-1.5">

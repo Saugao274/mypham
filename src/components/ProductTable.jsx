@@ -191,27 +191,31 @@ export default function ProductTable({ monthId, category, items, loading, onChan
     return acc;
   }, { tongVon: 0, vonCon: 0, tongBan: 0, tongLai: 0, tongChi: 0 });
 
-  const showLoai = category.hasLoaiHang;
+  const showLoai = category?.hasLoaiHang;
 
-  const Th = ({ k, label, className = '' }) => (
-    <th className={`cursor-pointer hover:bg-slate-100 select-none ${className}`} onClick={() => handleSort(k)}>
-      <div className="flex items-center justify-between gap-1">
-        <span>{label}</span>
-        {sortConfig.key === k && (
-          <span className="text-[10px] text-brand-600">{sortConfig.dir === 'asc' ? '▲' : '▼'}</span>
-        )}
-      </div>
-    </th>
-  );
+  function renderTh(k, label, className = '') {
+    return (
+      <th key={k} className={`cursor-pointer hover:bg-slate-100 select-none ${className}`} onClick={() => handleSort(k)}>
+        <div className="flex items-center justify-between gap-1">
+          <span>{label}</span>
+          {sortConfig.key === k && (
+            <span className="text-[10px] text-brand-600">{sortConfig.dir === 'asc' ? '▲' : '▼'}</span>
+          )}
+        </div>
+      </th>
+    );
+  }
 
-  const FilterInput = ({ k, placeholder = 'Lọc...' }) => (
-    <input
-      className="w-full text-xs border border-slate-300 rounded px-1 py-0.5 font-normal"
-      placeholder={placeholder}
-      value={filters[k] || ''}
-      onChange={e => handleFilter(k, e.target.value)}
-    />
-  );
+  function renderFilter(k, placeholder = 'Lọc...') {
+    return (
+      <input
+        className="w-full text-xs border border-slate-300 rounded px-1 py-0.5 font-normal"
+        placeholder={placeholder}
+        value={filters[k] || ''}
+        onChange={e => handleFilter(k, e.target.value)}
+      />
+    );
+  }
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
@@ -229,47 +233,47 @@ export default function ProductTable({ monthId, category, items, loading, onChan
         <table className="tbl text-sm">
           <thead>
             <tr>
-              <Th k="index" label="TT" className="w-12 text-center" />
-              <Th k="ten" label="Tên SP" className="min-w-[180px]" />
-              {showLoai && <Th k="loaiHang" label="Loại hàng" />}
-              <Th k="sl" label="SL" className="text-right min-w-[65px]" />
-              <Th k="giaMua" label="Giá mua" className="text-right min-w-[75px]" />
+              {renderTh('index', 'TT', 'w-12 text-center')}
+              {renderTh('ten', 'Tên SP', 'min-w-[180px]')}
+              {showLoai && renderTh('loaiHang', 'Loại hàng')}
+              {renderTh('sl', 'SL', 'text-right min-w-[65px]')}
+              {renderTh('giaMua', 'Giá mua', 'text-right min-w-[75px]')}
               {showCalculated && <th className="text-right bg-slate-50 min-w-[90px]">Tổng vốn</th>}
-              <Th k="slCon" label="SL còn" className="text-right min-w-[70px]" />
+              {renderTh('slCon', 'SL còn', 'text-right min-w-[70px]')}
               {showCalculated && <th className="text-right bg-slate-50 min-w-[90px]">Vốn còn</th>}
-              <Th k="giaBan" label="Giá bán" className="text-right min-w-[75px]" />
-              <Th k="slBan" label="SL bán" className="text-right min-w-[70px]" />
+              {renderTh('giaBan', 'Giá bán', 'text-right min-w-[75px]')}
+              {renderTh('slBan', 'SL bán', 'text-right min-w-[70px]')}
               {showCalculated && <th className="text-right bg-slate-50 min-w-[90px]">Tổng bán</th>}
               {showCalculated && <th className="text-right bg-slate-50 min-w-[90px]">Tổng lãi</th>}
-              <Th k="slChi" label="SL chi" className="text-right min-w-[70px]" />
+              {renderTh('slChi', 'SL chi', 'text-right min-w-[70px]')}
               {showCalculated && <th className="text-right bg-slate-50 min-w-[90px]">Tổng chi</th>}
-              <Th k="date" label="Date" className="min-w-[80px]" />
-              <Th k="baoDongMonths" label="Báo động" className="text-center min-w-[70px] text-[11px] leading-tight" />
-              <Th k="dienGiai" label="Diễn giải" className="min-w-[160px]" />
-              <Th k="giamCuoc" label="Giảm/cước" className="text-right min-w-[80px]" />
-              <Th k="nhap" label="Nhập" className="min-w-[100px]" />
+              {renderTh('date', 'Date', 'min-w-[80px]')}
+              {renderTh('baoDongMonths', 'Báo động', 'text-center min-w-[70px] text-[11px] leading-tight')}
+              {renderTh('dienGiai', 'Diễn giải', 'min-w-[160px]')}
+              {renderTh('giamCuoc', 'Giảm/cước', 'text-right min-w-[80px]')}
+              {renderTh('nhap', 'Nhập', 'min-w-[100px]')}
               <th></th>
             </tr>
             <tr className="bg-slate-50/50">
-              <td className="px-1 py-1"><FilterInput k="index" /></td>
-              <td className="px-1 py-1"><FilterInput k="ten" /></td>
-              {showLoai && <td className="px-1 py-1"><FilterInput k="loaiHang" /></td>}
-              <td className="px-1 py-1"><FilterInput k="sl" /></td>
-              <td className="px-1 py-1"><FilterInput k="giaMua" /></td>
+              <td className="px-1 py-1">{renderFilter('index')}</td>
+              <td className="px-1 py-1">{renderFilter('ten')}</td>
+              {showLoai && <td className="px-1 py-1">{renderFilter('loaiHang')}</td>}
+              <td className="px-1 py-1">{renderFilter('sl')}</td>
+              <td className="px-1 py-1">{renderFilter('giaMua')}</td>
               {showCalculated && <td className="bg-slate-50"></td>}
-              <td className="px-1 py-1"><FilterInput k="slCon" /></td>
+              <td className="px-1 py-1">{renderFilter('slCon')}</td>
               {showCalculated && <td className="bg-slate-50"></td>}
-              <td className="px-1 py-1"><FilterInput k="giaBan" /></td>
-              <td className="px-1 py-1"><FilterInput k="slBan" /></td>
+              <td className="px-1 py-1">{renderFilter('giaBan')}</td>
+              <td className="px-1 py-1">{renderFilter('slBan')}</td>
               {showCalculated && <td className="bg-slate-50"></td>}
               {showCalculated && <td className="bg-slate-50"></td>}
-              <td className="px-1 py-1"><FilterInput k="slChi" /></td>
+              <td className="px-1 py-1">{renderFilter('slChi')}</td>
               {showCalculated && <td className="bg-slate-50"></td>}
-              <td className="px-1 py-1"><FilterInput k="date" /></td>
+              <td className="px-1 py-1">{renderFilter('date')}</td>
               <td></td>
-              <td className="px-1 py-1"><FilterInput k="dienGiai" /></td>
-              <td className="px-1 py-1"><FilterInput k="giamCuoc" /></td>
-              <td className="px-1 py-1"><FilterInput k="nhap" /></td>
+              <td className="px-1 py-1">{renderFilter('dienGiai')}</td>
+              <td className="px-1 py-1">{renderFilter('giamCuoc')}</td>
+              <td className="px-1 py-1">{renderFilter('nhap')}</td>
               <td></td>
             </tr>
           </thead>
@@ -385,7 +389,7 @@ function NewRow({ items, row, setRow, showLoai, showCalculated, onSave, onCancel
               <span className="font-semibold">Đã có sản phẩm này trong danh sách:</span>
               {duplicateMatches.map((m, idx) => (
                 <span key={m._id || idx} className="bg-white/90 border border-amber-300 rounded px-2 py-0.5 font-medium shadow-sm">
-                  "{m.ten}" (Giá mua: {fmt(m.giaMua)} · Nơi nhập: {m.nhap || 'Trống'} · SL còn: {m.slCon || 0})
+                  &ldquo;{m.ten}&rdquo; (Giá mua: {fmt(m.giaMua)} · Nơi nhập: {m.nhap || 'Trống'} · SL còn: {m.slCon || 0})
                 </span>
               ))}
               <span className="text-amber-800 italic ml-1">(Bạn vẫn có thể tiếp tục nhập nếu khác giá hoặc nơi nhập)</span>

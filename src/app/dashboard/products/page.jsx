@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useCurrentMonth } from '@/lib/useCurrentMonth';
 import ProductTable from '@/components/ProductTable';
 import AiBillScannerModal from '@/components/AiBillScannerModal';
@@ -13,13 +13,14 @@ export default function ProductsPage() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [droppedFile, setDroppedFile] = useState(null);
   const [isPageDragging, setIsPageDragging] = useState(false);
+  const dragCounter = useRef(0);
 
   useEffect(() => { reload(); }, []);
   useEffect(() => {
     fetch('/api/categories').then(r => r.json()).then(list => {
       setCategories(list);
       setActiveCat(prev => prev || list[0]?.key);
-    });
+    }).catch(console.error);
   }, []);
 
   async function loadProducts() {
@@ -29,13 +30,37 @@ export default function ProductsPage() {
       const res = await fetch(`/api/products?monthId=${monthId}&t=${Date.now()}`);
       const data = await res.json();
       setProducts(Array.isArray(data) ? data : []);
-    } finally { setLoading(false); }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => { loadProducts(); }, [monthId]);
 
-  // Global Paste (Ctrl+V) anywhere on the Products page
+  // Global Paste (Ctrl+V) anywhere on the Products page (only when not typing in text inputs)
   useEffect(() => {
     function handleGlobalPaste(e) {
+      const target = e.target;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+        // If typing in input, let normal text paste work
+        const items = e.clipboardData?.items;
+        if (items) {
+          for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+              const file = items[i].getAsFile();
+              if (file) {
+                e.preventDefault();
+                setDroppedFile(file);
+                setScannerOpen(true);
+                break;
+              }
+            }
+          }
+        }
+        return;
+      }
+
       const items = e.clipboardData?.items;
       if (!items) return;
       for (let i = 0; i < items.length; i++) {
@@ -44,8 +69,8 @@ export default function ProductsPage() {
           if (file) {
             setDroppedFile(file);
             setScannerOpen(true);
+            break;
           }
-          break;
         }
       }
     }
@@ -53,25 +78,35 @@ export default function ProductsPage() {
     return () => window.removeEventListener('paste', handleGlobalPaste);
   }, []);
 
+  function handlePageDragEnter(e) {
+    e.preventDefault();
+    dragCounter.current += 1;
+    if (e.dataTransfer?.items && e.dataTransfer.items.length > 0) {
+      setIsPageDragging(true);
+    }
+  }
+
   function handlePageDragOver(e) {
     e.preventDefault();
-    setIsPageDragging(true);
   }
 
   function handlePageDragLeave(e) {
     e.preventDefault();
-    if (!e.relatedTarget || e.relatedTarget === document.documentElement) {
+    dragCounter.current -= 1;
+    if (dragCounter.current <= 0) {
+      dragCounter.current = 0;
       setIsPageDragging(false);
     }
   }
 
   function handlePageDrop(e) {
     e.preventDefault();
+    dragCounter.current = 0;
     setIsPageDragging(false);
     const files = e.dataTransfer?.files;
     if (files && files.length > 0) {
       const file = files[0];
-      if (file.type.startsWith('image/')) {
+      if (file.type && file.type.startsWith('image/')) {
         setDroppedFile(file);
         setScannerOpen(true);
       }
@@ -88,6 +123,7 @@ export default function ProductsPage() {
 
   return (
     <div
+      onDragEnter={handlePageDragEnter}
       onDragOver={handlePageDragOver}
       onDragLeave={handlePageDragLeave}
       onDrop={handlePageDrop}
@@ -95,7 +131,7 @@ export default function ProductsPage() {
     >
       {/* Global Drag Drop Hint */}
       {isPageDragging && (
-        <div className="fixed inset-0 z-40 bg-brand-600/80 backdrop-blur-sm flex flex-col items-center justify-center text-white border-4 border-dashed border-white m-4 rounded-3xl animate-pulse pointer-events-none">
+        <div className="fixed inset-0 z-40 bg-brand-700/85 backdrop-blur-sm flex flex-col items-center justify-center text-white border-4 border-dashed border-white m-4 rounded-3xl animate-pulse pointer-events-none">
           <span className="text-6xl mb-3">📥</span>
           <span className="text-2xl font-bold">Thả ảnh đơn hàng vào đây</span>
           <span className="text-sm opacity-90 mt-1">AI sẽ tự động đọc Tên SP, Số lượng và Giá mua ngay lập tức!</span>
@@ -152,14 +188,16 @@ export default function ProductsPage() {
         />
       )}
 
-      <AiBillScannerModal
-        isOpen={scannerOpen}
-        onClose={() => { setScannerOpen(false); setDroppedFile(null); }}
-        monthId={monthId}
-        currentCategoryKey={activeCat}
-        onImportSuccess={loadProducts}
-        initialImageFile={droppedFile}
-      />
+      {scannerOpen && (
+        <AiBillScannerModal
+          isOpen={scannerOpen}
+          onClose={() => { setScannerOpen(false); setDroppedFile(null); }}
+          monthId={monthId}
+          currentCategoryKey={activeCat}
+          onImportSuccess={loadProducts}
+          initialImageFile={droppedFile}
+        />
+      )}
     </div>
   );
 }
