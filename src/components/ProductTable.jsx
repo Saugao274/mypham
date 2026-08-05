@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 
 function suggestCategory(name, items) {
   if (!name || !items || !items.length) return "";
