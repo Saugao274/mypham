@@ -115,16 +115,13 @@ function ImportPanel({ months, activeId, onImported }) {
   const [replace, setReplace] = useState(true);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
-
-  // Tuỳ chọn tạo tháng mới lúc import
   const [newYear, setNewYear] = useState(new Date().getFullYear());
   const [newMonth, setNewMonth] = useState(new Date().getMonth() + 1);
   const [createNew, setCreateNew] = useState(false);
-
-  useEffect(() => { if (activeId) setTargetMonthId(activeId); }, [activeId]);
-
   const [file, setFile] = useState(null);
   const [gUrl, setGUrl] = useState('');
+
+  useEffect(() => { if (activeId) setTargetMonthId(activeId); }, [activeId]);
 
   async function doImport() {
     setBusy(true); setMsg('');

@@ -8,13 +8,25 @@ export default function DashboardPage() {
   const { monthId, months, reload } = useCurrentMonth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [recentLogs, setRecentLogs] = useState([]);
 
   useEffect(() => { reload(); }, []);
+
   useEffect(() => {
     if (!monthId) { setData(null); return; }
     setLoading(true);
     fetch(`/api/summary/${monthId}?t=${Date.now()}`).then(r => r.json())
       .then(setData).finally(() => setLoading(false));
+  }, [monthId]);
+
+  useEffect(() => {
+    if (monthId) {
+      fetch(`/api/history?monthId=${monthId}&limit=5`).then(r => r.json()).then(data => {
+        setRecentLogs(Array.isArray(data) ? data : []);
+      });
+    } else {
+      setRecentLogs([]);
+    }
   }, [monthId]);
 
   if (!months.length) {
@@ -27,16 +39,6 @@ export default function DashboardPage() {
   }
 
   const currentLabel = months.find(m => m._id === monthId)?.label || '';
-
-  const [recentLogs, setRecentLogs] = useState([]);
-
-  useEffect(() => {
-    if (monthId) {
-      fetch(`/api/history?monthId=${monthId}&limit=5`).then(r => r.json()).then(data => {
-        setRecentLogs(Array.isArray(data) ? data : []);
-      });
-    }
-  }, [monthId]);
 
   return (
     <div className="space-y-4">
