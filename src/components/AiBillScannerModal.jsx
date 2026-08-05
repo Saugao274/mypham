@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { CATEGORIES } from '@/lib/categories';
 
-export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCategoryKey, onImportSuccess }) {
+export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCategoryKey, onImportSuccess, initialImageFile = null }) {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -12,6 +12,7 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
   const [apiKey, setApiKey] = useState('');
   const [showKeyInput, setShowKeyInput] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -20,6 +21,13 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
   }, []);
 
   useEffect(() => {
+    if (initialImageFile && isOpen) {
+      processFileAndAutoScan(initialImageFile);
+    }
+  }, [initialImageFile, isOpen]);
+
+  // Support paste (Ctrl+V) anywhere inside the window when modal is open
+  useEffect(() => {
     function handlePaste(e) {
       if (!isOpen) return;
       const clipboardItems = e.clipboardData?.items;
@@ -27,33 +35,62 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
       for (let i = 0; i < clipboardItems.length; i++) {
         if (clipboardItems[i].type.indexOf('image') !== -1) {
           const file = clipboardItems[i].getAsFile();
-          handleSelectFile(file);
+          if (file) {
+            processFileAndAutoScan(file);
+          }
           break;
         }
       }
     }
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
-  }, [isOpen]);
+  }, [isOpen, apiKey]);
 
   if (!isOpen) return null;
 
-  function handleSelectFile(file) {
+  function processFileAndAutoScan(file) {
     if (!file) return;
     setImageFile(file);
     setErrorMsg('');
     const reader = new FileReader();
     reader.onload = (e) => {
-      setImagePreview(e.target.result);
+      const base64 = e.target.result;
+      setImagePreview(base64);
+      // Auto trigger scan for instant speed
+      triggerScan(base64, file.type || 'image/jpeg');
     };
     reader.readAsDataURL(file);
   }
 
-  async function handleScan() {
-    if (!imagePreview) {
-      setErrorMsg('Vui lòng chọn ảnh trước');
-      return;
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }
+
+  function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        processFileAndAutoScan(file);
+      } else {
+        setErrorMsg('Vui lòng kéo file hình ảnh (PNG, JPG, JPEG, WEBP...)');
+      }
     }
+  }
+
+  async function triggerScan(base64Data, mime) {
+    const activeKey = apiKey.trim() || localStorage.getItem('GEMINI_API_KEY') || '';
     setScanning(true);
     setErrorMsg('');
 
@@ -62,17 +99,17 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          imageBase64: imagePreview,
-          mimeType: imageFile?.type || 'image/jpeg',
-          userApiKey: apiKey.trim(),
+          imageBase64: base64Data,
+          mimeType: mime,
+          userApiKey: activeKey,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        if (data.error === 'NEED_API_KEY') {
+        if (data.error === 'NEED_API_KEY' || data.error === 'INVALID_API_KEY') {
           setShowKeyInput(true);
-          setErrorMsg(data.message || 'Cần có Google Gemini API Key để quét ảnh.');
+          setErrorMsg(data.message || 'Mã API Key chưa đúng hoặc chưa được nhập.');
         } else {
           setErrorMsg(data.message || 'Lỗi quét ảnh. Vui lòng thử lại.');
         }
@@ -80,8 +117,8 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
         return;
       }
 
-      if (data.apiKey) {
-        localStorage.setItem('GEMINI_API_KEY', apiKey.trim());
+      if (activeKey) {
+        localStorage.setItem('GEMINI_API_KEY', activeKey);
       }
 
       setSupplier(data.supplier || '');
@@ -165,15 +202,22 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 md:p-6 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-200">
+    <div
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 md:p-6 overflow-y-auto"
+    >
+      <div className={`bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden border transition-all ${
+        isDragging ? 'border-brand-500 ring-4 ring-brand-300 scale-[1.01]' : 'border-slate-200'
+      }`}>
         {/* Header */}
-        <div className="bg-gradient-to-r from-brand-700 to-brand-600 text-white px-6 py-4 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-brand-700 via-indigo-700 to-brand-600 text-white px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <span className="text-2xl">📷</span>
             <div>
               <h3 className="text-lg font-bold">Quét ảnh đơn hàng / Bill bằng AI</h3>
-              <p className="text-xs text-brand-100">Tự động nhận diện Tên sản phẩm, Số lượng, Giá nhập và Gợi ý danh mục</p>
+              <p className="text-xs text-brand-100">Kéo thả ảnh, dán ảnh (Ctrl+V) hoặc chọn file để AI tự quét ngay</p>
             </div>
           </div>
           <button onClick={onClose} className="text-white/80 hover:text-white text-2xl font-bold p-1 leading-none">✕</button>
@@ -181,6 +225,13 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
 
         {/* Body */}
         <div className="p-5 flex-1 overflow-y-auto space-y-4">
+          {/* Drag Overlay visual hint */}
+          {isDragging && (
+            <div className="p-4 bg-brand-50 border-2 border-dashed border-brand-500 rounded-xl text-center text-brand-700 font-bold animate-pulse">
+              📥 Thả ảnh vào đây để phân tích tự động ngay lập tức!
+            </div>
+          )}
+
           {/* Error Message */}
           {errorMsg && (
             <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-start gap-2">
@@ -199,33 +250,71 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
             </div>
           )}
 
-          {/* Optional API Key Input */}
+          {/* API Key Input */}
           {(showKeyInput || !apiKey) && (
-            <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs space-y-1.5">
+            <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl text-xs space-y-2 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-amber-900">🔑 Google Gemini API Key (Miễn phí):</span>
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-brand-600 font-medium hover:underline">
-                  Lấy Key miễn phí tại đây ↗
+                <span className="font-bold text-amber-900 flex items-center gap-1.5">
+                  <span>🔑</span> Nhập mã Google Gemini API Key (Miễn phí 100%):
+                </span>
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-brand-600 text-white font-bold px-2.5 py-1 rounded-md text-[11px] hover:bg-brand-700 shadow-sm"
+                >
+                  👉 Bấm vào đây để lấy Key miễn phí ↗
                 </a>
               </div>
-              <input
-                type="password"
-                value={apiKey}
-                onChange={e => setApiKey(e.target.value)}
-                placeholder="Dán mã API Key (AIzaSy...)"
-                className="w-full bg-white border border-amber-300 rounded px-2.5 py-1.5 text-xs font-mono"
-              />
+              <p className="text-slate-600 text-[11px]">
+                (Chỉ cần đăng nhập tài khoản Google của bạn &rarr; Bấm nút <b>&quot;Create API key&quot;</b> &rarr; Copy dán vào ô bên dưới)
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={apiKey}
+                  onChange={e => {
+                    setApiKey(e.target.value);
+                    localStorage.setItem('GEMINI_API_KEY', e.target.value.trim());
+                  }}
+                  placeholder="Dán mã API Key bắt đầu bằng AIzaSy..."
+                  className="flex-1 bg-white border border-amber-400 rounded-lg px-3 py-1.5 text-xs font-mono font-medium focus:ring-2 focus:ring-brand-500"
+                />
+                {imagePreview && (
+                  <button
+                    type="button"
+                    onClick={() => triggerScan(imagePreview, imageFile?.type || 'image/jpeg')}
+                    className="btn !bg-amber-700 !text-white font-bold py-1.5 px-3 rounded-lg text-xs hover:!bg-amber-800 shrink-0"
+                  >
+                    ⚡ Thử quét lại
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
-          {/* Upload Area */}
-          {!items.length && (
-            <div className="border-2 border-dashed border-slate-300 hover:border-brand-500 rounded-2xl p-6 text-center bg-slate-50 transition-colors">
+          {/* Scanning Progress */}
+          {scanning && (
+            <div className="p-8 text-center bg-brand-50/50 border border-brand-200 rounded-2xl space-y-3">
+              <div className="inline-block animate-spin text-4xl">⚡</div>
+              <p className="text-base font-bold text-brand-800">Đang phân tích hình ảnh và trích xuất sản phẩm...</p>
+              <p className="text-xs text-brand-600">AI đang đọc Tên SP, Số lượng trong vòng tròn xanh, Giá nhập và gợi ý Danh mục...</p>
+            </div>
+          )}
+
+          {/* Upload Dropzone */}
+          {!scanning && items.length === 0 && (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
+                isDragging ? 'border-brand-600 bg-brand-50 scale-[1.02]' : 'border-slate-300 hover:border-brand-500 bg-slate-50 hover:bg-slate-100/70'
+              }`}
+            >
               <input
                 type="file"
                 ref={fileInputRef}
                 accept="image/*"
-                onChange={e => handleSelectFile(e.target.files?.[0])}
+                onChange={e => processFileAndAutoScan(e.target.files?.[0])}
                 className="hidden"
               />
 
@@ -237,57 +326,54 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
                   <div className="flex justify-center gap-3">
                     <button
                       type="button"
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
                       className="btn-ghost text-sm py-2 px-4"
                     >
-                      🔄 Chọn ảnh khác
+                      🔄 Kéo hoặc Chọn ảnh khác
                     </button>
                     <button
                       type="button"
-                      disabled={scanning}
-                      onClick={handleScan}
-                      className="btn !bg-gradient-to-r from-brand-600 to-indigo-600 !text-white font-bold py-2.5 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all"
+                      onClick={(e) => { e.stopPropagation(); triggerScan(imagePreview, imageFile?.type || 'image/jpeg'); }}
+                      className="btn !bg-brand-600 !text-white font-bold py-2 px-6 rounded-xl shadow"
                     >
-                      {scanning ? '⏳ Đang phân tích ảnh...' : '⚡ Bắt đầu phân tích ảnh'}
+                      ⚡ Quét lại
                     </button>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-3 py-4">
-                  <div className="text-4xl">📸</div>
+                  <div className="text-5xl animate-bounce">📥</div>
                   <div>
-                    <p className="text-base font-semibold text-slate-700">Tải ảnh hoặc Chụp ảnh đơn hàng / Bill</p>
-                    <p className="text-xs text-slate-500 mt-1">Hỗ trợ ảnh chụp điện thoại, ảnh màn hình Zalo, Facebook, giỏ hàng Shopee, TikTok...</p>
+                    <p className="text-lg font-bold text-slate-800">Kéo & Thả ảnh vào đây</p>
+                    <p className="text-xs text-slate-500 mt-1">Hoặc bấm vào để chọn ảnh từ máy tính / điện thoại</p>
                   </div>
                   <div className="pt-2 flex justify-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="btn font-semibold py-2 px-5"
-                    >
+                    <span className="btn font-semibold py-2 px-6 shadow-sm">
                       📁 Chọn ảnh từ thiết bị
-                    </button>
+                    </span>
                   </div>
-                  <p className="text-[11px] text-slate-400">💡 Mẹo: Bạn cũng có thể bấm <b>Ctrl + V</b> để dán trực tiếp ảnh vừa chụp màn hình</p>
+                  <div className="pt-2 text-xs text-slate-500 font-medium">
+                    ⚡ <b>Mẹo cực nhanh:</b> Chụp màn hình xong bấm <b>Ctrl + V</b> để quét ngay!
+                  </div>
                 </div>
               )}
             </div>
           )}
 
           {/* Results Table */}
-          {items.length > 0 && (
+          {!scanning && items.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-slate-800">
                     🎉 Đã tìm thấy {items.length} sản phẩm:
                   </span>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-slate-500 font-medium">
                     ({items.filter(i => i.selected).length} đã chọn)
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
-                  <label className="text-slate-600">Nơi nhập chung:</label>
+                  <label className="text-slate-600 font-medium">Nơi nhập chung:</label>
                   <input
                     type="text"
                     value={supplier}
@@ -296,13 +382,13 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
                       setItems(prev => prev.map(it => ({ ...it, nhap: e.target.value })));
                     }}
                     placeholder="Mã đơn / Nơi nhập"
-                    className="border border-slate-300 rounded px-2 py-1 text-xs w-32 font-medium"
+                    className="border border-slate-300 rounded px-2 py-1 text-xs w-32 font-semibold"
                   />
                   <button
                     onClick={() => { setItems([]); setImagePreview(''); }}
-                    className="btn-ghost text-xs py-1 px-2.5 text-slate-500"
+                    className="btn-ghost text-xs py-1 px-2.5 text-slate-500 border border-slate-200"
                   >
-                    📷 Quét ảnh khác
+                    📷 Kéo ảnh khác
                   </button>
                 </div>
               </div>
@@ -364,7 +450,7 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
                           <select
                             value={it.categoryKey}
                             onChange={e => handleUpdateItem(it.id, 'categoryKey', e.target.value)}
-                            className="w-full bg-white border border-slate-300 rounded px-1.5 py-1 text-xs"
+                            className="w-full bg-white border border-slate-300 rounded px-1.5 py-1 text-xs font-medium"
                           >
                             {CATEGORIES.map(c => (
                               <option key={c.key} value={c.key}>{c.name}</option>
@@ -405,7 +491,7 @@ export default function AiBillScannerModal({ isOpen, onClose, monthId, currentCa
             <button
               onClick={handleImport}
               disabled={saving || items.filter(i => i.selected).length === 0}
-              className="btn !bg-green-600 hover:!bg-green-700 !text-white font-bold py-2 px-6 rounded-xl shadow-md flex items-center gap-2"
+              className="btn !bg-green-600 hover:!bg-green-700 !text-white font-bold py-2.5 px-6 rounded-xl shadow-md flex items-center gap-2 text-sm"
             >
               {saving ? '⏳ Đang lưu...' : `✅ Nhập ${items.filter(i => i.selected).length} sản phẩm vào bảng`}
             </button>

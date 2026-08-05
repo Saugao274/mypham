@@ -11,6 +11,8 @@ export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [droppedFile, setDroppedFile] = useState(null);
+  const [isPageDragging, setIsPageDragging] = useState(false);
 
   useEffect(() => { reload(); }, []);
   useEffect(() => {
@@ -31,6 +33,51 @@ export default function ProductsPage() {
   }
   useEffect(() => { loadProducts(); }, [monthId]);
 
+  // Global Paste (Ctrl+V) anywhere on the Products page
+  useEffect(() => {
+    function handleGlobalPaste(e) {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) {
+            setDroppedFile(file);
+            setScannerOpen(true);
+          }
+          break;
+        }
+      }
+    }
+    window.addEventListener('paste', handleGlobalPaste);
+    return () => window.removeEventListener('paste', handleGlobalPaste);
+  }, []);
+
+  function handlePageDragOver(e) {
+    e.preventDefault();
+    setIsPageDragging(true);
+  }
+
+  function handlePageDragLeave(e) {
+    e.preventDefault();
+    if (!e.relatedTarget || e.relatedTarget === document.documentElement) {
+      setIsPageDragging(false);
+    }
+  }
+
+  function handlePageDrop(e) {
+    e.preventDefault();
+    setIsPageDragging(false);
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        setDroppedFile(file);
+        setScannerOpen(true);
+      }
+    }
+  }
+
   const cat = categories.find(c => c.key === activeCat) || categories[0];
   const items = products.filter(p => p.categoryKey === activeCat);
 
@@ -40,7 +87,21 @@ export default function ProductsPage() {
   if (!monthId) return null;
 
   return (
-    <div className="space-y-4">
+    <div
+      onDragOver={handlePageDragOver}
+      onDragLeave={handlePageDragLeave}
+      onDrop={handlePageDrop}
+      className="space-y-4 relative min-h-[70vh]"
+    >
+      {/* Global Drag Drop Hint */}
+      {isPageDragging && (
+        <div className="fixed inset-0 z-40 bg-brand-600/80 backdrop-blur-sm flex flex-col items-center justify-center text-white border-4 border-dashed border-white m-4 rounded-3xl animate-pulse pointer-events-none">
+          <span className="text-6xl mb-3">📥</span>
+          <span className="text-2xl font-bold">Thả ảnh đơn hàng vào đây</span>
+          <span className="text-sm opacity-90 mt-1">AI sẽ tự động đọc Tên SP, Số lượng và Giá mua ngay lập tức!</span>
+        </div>
+      )}
+
       {/* Action Bar with AI Scanner */}
       <div className="flex items-center justify-between flex-wrap gap-2 bg-white border border-slate-200 p-2.5 rounded-xl">
         <div className="flex items-center gap-2">
@@ -48,9 +109,12 @@ export default function ProductsPage() {
           <span className="text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full font-medium">
             {products.length} tổng SP
           </span>
+          <span className="hidden md:inline-block text-[11px] text-slate-400">
+            (💡 Kéo thả ảnh hoặc bấm Ctrl+V vào trang để quét nhanh)
+          </span>
         </div>
         <button
-          onClick={() => setScannerOpen(true)}
+          onClick={() => { setDroppedFile(null); setScannerOpen(true); }}
           className="btn !bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 !text-white font-bold py-1.5 px-3.5 rounded-lg shadow hover:shadow-md flex items-center gap-1.5 text-xs transition-all"
         >
           <span className="text-base leading-none">📷</span> Quét ảnh đơn hàng (AI)
@@ -90,10 +154,11 @@ export default function ProductsPage() {
 
       <AiBillScannerModal
         isOpen={scannerOpen}
-        onClose={() => setScannerOpen(false)}
+        onClose={() => { setScannerOpen(false); setDroppedFile(null); }}
         monthId={monthId}
         currentCategoryKey={activeCat}
         onImportSuccess={loadProducts}
+        initialImageFile={droppedFile}
       />
     </div>
   );

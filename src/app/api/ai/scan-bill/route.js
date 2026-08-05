@@ -84,9 +84,14 @@ BẮT BUỘC: Trả về kết quả ĐÚNG định dạng JSON sau (không kèm
     return NextResponse.json(parsed);
   } catch (err) {
     console.error('Error scanning image with Gemini:', err);
+    const msg = err.message || '';
+    const isInvalidKey = msg.includes('API key not valid') || msg.includes('API_KEY_INVALID') || msg.includes('400 Bad Request');
+    
     return NextResponse.json({
-      error: 'SCAN_FAILED',
-      message: err.message || 'Không thể phân tích ảnh. Vui lòng thử lại với ảnh rõ nét hơn hoặc kiểm tra API Key.',
-    }, { status: 500 });
+      error: isInvalidKey ? 'INVALID_API_KEY' : 'SCAN_FAILED',
+      message: isInvalidKey
+        ? 'Mã Google Gemini API Key không hợp lệ hoặc chưa được kích hoạt. Vui lòng kiểm tra lại mã API Key.'
+        : (err.message || 'Không thể phân tích ảnh. Vui lòng thử lại với ảnh rõ nét hơn.'),
+    }, { status: isInvalidKey ? 400 : 500 });
   }
 }
