@@ -137,7 +137,7 @@ export default function ProductTable({ monthId, category, items, loading, onChan
     };
   }
 
-  async function saveNew(isAutoSave) {
+  const saveNew = useCallback(async (isAutoSave) => {
     if (!newRow.ten.trim()) {
       if (isAutoSave === true) {
         setAdding(false);
@@ -145,7 +145,7 @@ export default function ProductTable({ monthId, category, items, loading, onChan
       }
       return;
     }
-    const body = { ...newRow, monthId, categoryKey: category.key };
+    const body = { ...newRow, monthId, categoryKey: category?.key || 'tap_hoa' };
     if (!body.slCon) body.slCon = body.sl;
     const res = await fetch('/api/products', {
       method: 'POST',
@@ -159,7 +159,7 @@ export default function ProductTable({ monthId, category, items, loading, onChan
     } else {
       alert('Lỗi khi thêm sản phẩm');
     }
-  }
+  }, [newRow, monthId, category, onChanged]);
 
   const processedItems = useMemo(() => {
     let arr = items.map((item, i) => ({ ...item, _originalIndex: i + 1 }));
@@ -314,8 +314,8 @@ export default function ProductTable({ monthId, category, items, loading, onChan
             {adding && (
               <NewRow items={items} row={newRow} setRow={setNewRow} showLoai={showLoai} showCalculated={showCalculated} hideExtra={hideExtra} totalCols={totalCols} onSave={saveNew} onCancel={() => { setAdding(false); setNewRow(makeEmpty()); }} />
             )}
-            {processedItems.map((p) => (
-              <EditableRow key={p._id} index={p._originalIndex} product={p} showLoai={showLoai} showCalculated={showCalculated} hideExtra={hideExtra} onChanged={onChanged} onRowChange={onRowChange} />
+            {processedItems.map((p, idx) => (
+              <EditableRow key={p._id || `prod-${idx}`} index={p._originalIndex} product={p} showLoai={showLoai} showCalculated={showCalculated} hideExtra={hideExtra} onChanged={onChanged} onRowChange={onRowChange} />
             ))}
             {!processedItems.length && !adding && (
               <tr><td colSpan={totalCols} className="text-center text-slate-400 py-6">
@@ -348,16 +348,22 @@ export default function ProductTable({ monthId, category, items, loading, onChan
 
 function NewRow({ items, row, setRow, showLoai, showCalculated, hideExtra, totalCols, onSave, onCancel }) {
   const trRef = useRef(null);
+  const onSaveRef = useRef(onSave);
+  useEffect(() => {
+    onSaveRef.current = onSave;
+  }, [onSave]);
 
   useEffect(() => {
     function handleClickOutside(e) {
       if (trRef.current && !trRef.current.contains(e.target)) {
-        onSave(true);
+        if (onSaveRef.current) {
+          onSaveRef.current(true);
+        }
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onSave]);
+  }, []);
 
   const duplicateMatches = useMemo(() => {
     const t = (row.ten || '').trim().toLowerCase();
