@@ -23,11 +23,13 @@ export async function GET(req, { params }) {
     const products = await Product.find({ monthId: m._id.toString() });
     
     let tongBan = 0;
+    let tongLai = 0;
     let tongChi = 0;
     let vonCon = 0;
     
     for (const p of products) {
       tongBan += (p.slBan || 0) * (p.giaBan || 0);
+      tongLai += (p.slBan || 0) * (p.giaBan || 0) - (p.slBan || 0) * (p.giaMua || 0) - (p.giamCuoc || 0);
       tongChi += (p.slChi || 0) * (p.giaMua || 0);
       vonCon += (p.slCon || 0) * (p.giaMua || 0);
     }
@@ -36,16 +38,15 @@ export async function GET(req, { params }) {
     const purchases = m.purchases || [];
     let tongMua = purchases.reduce((sum, p) => sum + (p.amount || 0), 0);
     
-    // Thu: Tổng bán
-    // Chi: Tổng chi (từ sản phẩm)
-    // Chênh lệch: Thu - Chi
-    const chenhLech = tongBan - tongChi;
+    // Chênh lệch (lợi nhuận ròng) = Tổng lãi gộp - Tổng chi phí (hàng lỗi/biếu)
+    const chenhLech = tongLai - tongChi;
     
     result.push({
       _id: m._id,
       month: m.month,
       label: m.label,
       tongBan: round2(tongBan),
+      tongLai: round2(tongLai),
       tongChi: round2(tongChi),
       chenhLech: round2(chenhLech),
       vonCon: round2(vonCon),

@@ -21,10 +21,11 @@ export default function YearlyTable({ data, loading, onReload }) {
 
   const totals = data.reduce((acc, row) => ({
     tongBan: acc.tongBan + (row.tongBan || 0),
+    tongLai: acc.tongLai + (row.tongLai || 0),
     tongChi: acc.tongChi + (row.tongChi || 0),
     chenhLech: acc.chenhLech + (row.chenhLech || 0),
     tongMua: acc.tongMua + (row.tongMua || 0),
-  }), { tongBan: 0, tongChi: 0, chenhLech: 0, tongMua: 0 });
+  }), { tongBan: 0, tongLai: 0, tongChi: 0, chenhLech: 0, tongMua: 0 });
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
@@ -33,7 +34,8 @@ export default function YearlyTable({ data, loading, onReload }) {
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 text-slate-600">
               <th className="p-3 font-semibold">Tháng</th>
-              <th className="p-3 font-semibold text-right text-blue-700">Tổng bán (Thu)</th>
+              <th className="p-3 font-semibold text-right text-blue-700">Tổng bán</th>
+              <th className="p-3 font-semibold text-right text-purple-700">Tổng lãi gộp</th>
               <th className="p-3 font-semibold text-right text-red-600">Tổng chi (SP)</th>
               <th className="p-3 font-semibold text-right text-emerald-700">Chênh lệch</th>
               <th className="p-3 font-semibold text-right text-slate-500">Vốn tồn kho</th>
@@ -56,6 +58,7 @@ export default function YearlyTable({ data, loading, onReload }) {
             <tr className="bg-brand-50 border-t-2 border-brand-100 font-bold text-brand-900">
               <td className="p-3">TỔNG NĂM</td>
               <td className="p-3 text-right text-blue-700">{fmt(totals.tongBan)}</td>
+              <td className="p-3 text-right text-purple-700">{fmt(totals.tongLai)}</td>
               <td className="p-3 text-right text-red-600">{fmt(totals.tongChi)}</td>
               <td className="p-3 text-right text-emerald-700">{fmt(totals.chenhLech)}</td>
               <td className="p-3 text-right text-slate-500">-</td>
@@ -115,6 +118,7 @@ function Row({ row, isExpanded, onToggle, onReload }) {
       <tr className={`hover:bg-slate-50 transition-colors cursor-pointer ${isExpanded ? 'bg-slate-50' : ''}`} onClick={onToggle}>
         <td className="p-3 font-semibold text-slate-700">{row.label}</td>
         <td className="p-3 text-right font-medium text-blue-700">{fmt(row.tongBan)}</td>
+        <td className="p-3 text-right font-medium text-purple-700">{fmt(row.tongLai)}</td>
         <td className="p-3 text-right font-medium text-red-600">{fmt(row.tongChi)}</td>
         <td className="p-3 text-right font-bold text-emerald-700">{fmt(row.chenhLech)}</td>
         <td className="p-3 text-right text-slate-500 font-medium">{fmt(row.vonCon)}</td>
@@ -126,7 +130,7 @@ function Row({ row, isExpanded, onToggle, onReload }) {
       
       {isExpanded && (
         <tr className="bg-slate-50/50">
-          <td colSpan="7" className="p-0">
+          <td colSpan="8" className="p-0">
             <div className="px-6 py-4 border-b border-slate-200">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
