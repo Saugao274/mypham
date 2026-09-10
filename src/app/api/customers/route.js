@@ -3,6 +3,8 @@ import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import Month from '@/models/Month';
 
+export const dynamic = 'force-dynamic';
+
 function round2(n) { return Math.round(n * 100) / 100; }
 
 function parseDienGiai(dienGiai) {

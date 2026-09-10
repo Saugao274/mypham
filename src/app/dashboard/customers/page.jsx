@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 
 const fmt = n => (n || n === 0) ? Number(n).toLocaleString('vi-VN') : '';
+const fmtMoney = n => (n || n === 0) ? (Number(n) * 1000).toLocaleString('vi-VN') : '';
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState([]);
@@ -10,7 +11,7 @@ export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   useEffect(() => {
-    fetch('/api/customers')
+    fetch('/api/customers?t=' + Date.now())
       .then(r => r.json())
       .then(data => {
         setCustomers(Array.isArray(data) ? data : []);
@@ -69,7 +70,7 @@ export default function CustomersPage() {
                         {c.name}
                       </span>
                       <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
-                        {fmt(c.totalSpent)}
+                        {fmtMoney(c.totalSpent)}
                       </span>
                     </div>
                   );
@@ -90,7 +91,7 @@ export default function CustomersPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Tổng chi tiêu</div>
-                  <div className="text-2xl font-bold text-emerald-600">{fmt(selectedCustomer.totalSpent)} ₫</div>
+                  <div className="text-2xl font-bold text-emerald-600">{fmtMoney(selectedCustomer.totalSpent)} ₫</div>
                 </div>
               </div>
               
@@ -114,8 +115,8 @@ export default function CustomersPage() {
                           {p.date && <div className="text-xs text-slate-400">Ngày: {p.date}</div>}
                         </td>
                         <td className="p-4 text-right font-medium text-slate-700">{fmt(p.qty)}</td>
-                        <td className="p-4 text-right text-slate-600">{fmt(p.price)}</td>
-                        <td className="p-4 text-right font-semibold text-emerald-600">{fmt(p.total)}</td>
+                        <td className="p-4 text-right text-slate-600">{fmtMoney(p.price)}</td>
+                        <td className="p-4 text-right font-semibold text-emerald-600">{fmtMoney(p.total)}</td>
                       </tr>
                     ))}
                   </tbody>
