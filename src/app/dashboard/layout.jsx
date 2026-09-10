@@ -20,6 +20,7 @@ export default function DashboardLayout({ children }) {
   const links = [
     { href: '/dashboard', label: 'Tổng hợp' },
     { href: '/dashboard/products', label: 'Sản phẩm' },
+    { href: '/dashboard/customers', label: 'Khách hàng' },
     { href: '/dashboard/debts', label: 'Nợ' },
     { href: '/dashboard/yearly', label: 'Báo cáo năm' },
     { href: '/dashboard/history', label: 'Lịch sử' },
