@@ -39,11 +39,18 @@ function parseDienGiai(dienGiai) {
   return results;
 }
 
-export async function GET() {
+export async function GET(req) {
   await connectDB();
+  const { searchParams } = new URL(req.url);
+  const monthId = searchParams.get('monthId');
   
-  // Lấy các sản phẩm có dienGiai khác rỗng
-  const products = await Product.find({ dienGiai: { $ne: '' } }).populate('monthId');
+  const query = { dienGiai: { $ne: '' } };
+  if (monthId && monthId !== 'all') {
+    query.monthId = monthId;
+  }
+  
+  // Lấy các sản phẩm có dienGiai khác rỗng (và theo tháng nếu có)
+  const products = await Product.find(query).populate('monthId');
   
   const customerMap = {};
   

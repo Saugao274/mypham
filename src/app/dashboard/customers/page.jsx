@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 
+import { useCurrentMonth } from '@/lib/useCurrentMonth';
+
 const fmt = n => (n || n === 0) ? Number(n).toLocaleString('vi-VN') : '';
 const fmtMoney = n => (n || n === 0) ? (Number(n) * 1000).toLocaleString('vi-VN') : '';
 
@@ -9,19 +11,28 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [filterMonth, setFilterMonth] = useState('all');
+  
+  const { months } = useCurrentMonth();
 
   useEffect(() => {
-    fetch('/api/customers?t=' + Date.now())
+    setLoading(true);
+    fetch(`/api/customers?t=${Date.now()}&monthId=${filterMonth}`)
       .then(r => r.json())
       .then(data => {
         setCustomers(Array.isArray(data) ? data : []);
         setLoading(false);
+        // If the selected customer is no longer in the list (or has updated totals), update it
+        if (selectedCustomer) {
+          const updated = (Array.isArray(data) ? data : []).find(c => c.name === selectedCustomer.name);
+          setSelectedCustomer(updated || null);
+        }
       })
       .catch(e => {
         console.error(e);
         setLoading(false);
       });
-  }, []);
+  }, [filterMonth]);
 
   const filtered = customers.filter(c => 
     c.name.toLowerCase().includes(search.toLowerCase())
@@ -29,13 +40,28 @@ export default function CustomersPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-        <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-          <span>👥</span> Thống kê Khách hàng
-        </h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Dữ liệu được trích xuất tự động từ cột "Diễn giải" của tất cả sản phẩm.
-        </p>
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+            <span>👥</span> Thống kê Khách hàng
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Dữ liệu được trích xuất tự động từ cột "Diễn giải" của các sản phẩm.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-slate-600">Lọc theo:</span>
+          <select 
+            value={filterMonth}
+            onChange={e => setFilterMonth(e.target.value)}
+            className="border border-slate-300 rounded-md px-3 py-1.5 text-sm font-semibold text-brand-700 outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+          >
+            <option value="all">Tất cả các tháng</option>
+            {months.map(m => (
+              <option key={m._id} value={m._id}>{m.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-6">
