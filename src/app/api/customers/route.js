@@ -9,7 +9,7 @@ function round2(n) { return Math.round(n * 100) / 100; }
 
 function parseDienGiai(dienGiai) {
   if (!dienGiai) return [];
-  const parts = dienGiai.split(',');
+  const parts = dienGiai.split(/[,\n]/);
   const results = [];
   
   for (let p of parts) {
