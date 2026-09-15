@@ -4,6 +4,8 @@ import Month from '@/models/Month';
 import Product from '@/models/Product';
 import Debt from '@/models/Debt';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   await connectDB();
   const list = await Month.find().sort({ year: -1, month: -1 }).lean();

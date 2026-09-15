@@ -274,6 +274,7 @@ function ShippingFeePanel({ months, activeId, onChange }) {
         body: JSON.stringify({ shippingFees: newFees, shippingFee: 0 })
       });
       if (!res.ok) throw new Error('Lỗi');
+      setFees(newFees);
       setMsg('✓ Đã lưu thay đổi');
       onChange();
     } catch(e) {

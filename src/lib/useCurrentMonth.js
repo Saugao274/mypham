@@ -17,7 +17,7 @@ function set(partial) {
 }
 
 async function fetchMonths() {
-  const res = await fetch('/api/months');
+  const res = await fetch(`/api/months?t=${Date.now()}`);
   if (!res.ok) return;
   const list = await res.json();
   let monthId = state.monthId;
