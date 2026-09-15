@@ -58,20 +58,26 @@ export async function GET(req) {
     if (!p.dienGiai) continue;
     const parsed = parseDienGiai(p.dienGiai);
     
+    // Tính tổng số lượng đã parse để chia đều giảm cước
+    const totalParsedQty = parsed.reduce((sum, item) => sum + item.qty, 0) || 1;
+    const giamCuoc = p.giamCuoc || 0;
+    const discountPerItem = giamCuoc / totalParsedQty;
+    
     for (const item of parsed) {
       if (!item.name) continue;
       
       const key = item.name.toLowerCase();
       if (!customerMap[key]) {
         customerMap[key] = {
-          name: item.name, // Lấy tên viết hoa/thường đầu tiên làm chuẩn
+          name: item.name,
           purchases: [],
           totalSpent: 0
         };
       }
       
       const price = p.giaBan || 0;
-      const total = item.qty * price;
+      // Thành tiền = (SL * Đơn giá) - Giảm cước tương ứng
+      const total = round2((item.qty * price) - (item.qty * discountPerItem));
       
       customerMap[key].purchases.push({
         _id: p._id.toString() + '_' + key,
@@ -80,6 +86,7 @@ export async function GET(req) {
         date: p.date,
         qty: item.qty,
         price: price,
+        discount: round2(item.qty * discountPerItem),
         total: total
       });
       

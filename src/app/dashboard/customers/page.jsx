@@ -125,10 +125,11 @@ export default function CustomersPage() {
                 <table className="w-full text-sm text-left">
                   <thead className="bg-slate-100 sticky top-0 shadow-sm">
                     <tr className="text-slate-600">
-                      <th className="p-4 font-semibold w-1/3">Tên sản phẩm</th>
+                      <th className="p-4 font-semibold w-1/4">Tên sản phẩm</th>
                       <th className="p-4 font-semibold w-1/6">Tháng</th>
-                      <th className="p-4 font-semibold text-right w-1/6">SL</th>
+                      <th className="p-4 font-semibold text-right w-1/12">SL</th>
                       <th className="p-4 font-semibold text-right w-1/6">Đơn giá</th>
+                      <th className="p-4 font-semibold text-right w-1/6">Giảm/Tặng</th>
                       <th className="p-4 font-semibold text-right w-1/6">Thành tiền</th>
                     </tr>
                   </thead>
@@ -142,6 +143,7 @@ export default function CustomersPage() {
                         </td>
                         <td className="p-4 text-right font-medium text-slate-700">{fmt(p.qty)}</td>
                         <td className="p-4 text-right text-slate-600">{fmtMoney(p.price)}</td>
+                        <td className="p-4 text-right text-rose-500 text-xs">{p.discount > 0 ? `-${fmtMoney(p.discount)}` : ''}</td>
                         <td className="p-4 text-right font-semibold text-emerald-600">{fmtMoney(p.total)}</td>
                       </tr>
                     ))}
