@@ -303,6 +303,7 @@ function ShippingFeePanel({ months, activeId, onChange }) {
   }
 
   const fmt = n => (n || n === 0) ? Number(n).toLocaleString('vi-VN') : '';
+  const fmtMoney = n => (n || n === 0) ? (Number(n) * 1000).toLocaleString('vi-VN') + ' ₫' : '';
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
@@ -326,7 +327,7 @@ function ShippingFeePanel({ months, activeId, onChange }) {
                 <tr key={idx} className="hover:bg-white transition-colors">
                   <td className="p-2 font-medium text-slate-700">{f.name}</td>
                   <td className="p-2 text-slate-500">{f.date || '-'}</td>
-                  <td className="p-2 text-right font-semibold text-rose-600">{fmt(f.amount)}</td>
+                  <td className="p-2 text-right font-semibold text-rose-600">{fmtMoney(f.amount)}</td>
                   <td className="p-2 text-center">
                     <button onClick={() => handleRemove(idx)} disabled={busy} className="text-slate-400 hover:text-red-500 p-1">✕</button>
                   </td>

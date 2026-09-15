@@ -57,7 +57,7 @@ export default function DashboardPage() {
 
       {data?.shippingFee > 0 && (
         <div className="text-right text-sm text-slate-500 italic">
-          * Tổng lãi đã trừ đi Cước vận chuyển: <span className="font-semibold text-rose-500">{fmt(data.shippingFee)}</span>
+          * Tổng lãi đã trừ đi Cước vận chuyển: <span className="font-semibold text-rose-500">{(data.shippingFee * 1000).toLocaleString('vi-VN')} ₫</span>
         </div>
       )}
 
