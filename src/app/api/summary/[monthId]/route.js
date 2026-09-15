@@ -91,7 +91,8 @@ export async function GET(_req, { params }) {
   alerts.sort((a, b) => a.remain - b.remain);
 
   const monthDoc = await import('@/models/Month').then(m => m.default.findById(monthId));
-  const shippingFee = monthDoc?.shippingFee || 0;
+  const shippingFees = monthDoc?.shippingFees || [];
+  const shippingFee = shippingFees.reduce((sum, f) => sum + (f.amount || 0), 0) || (monthDoc?.shippingFee || 0);
 
   return NextResponse.json({
     rows,

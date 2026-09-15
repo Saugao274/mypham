@@ -242,27 +242,39 @@ function ExportPanel({ months, activeId }) {
 }
 
 function ShippingFeePanel({ months, activeId, onChange }) {
-  const [fee, setFee] = useState('');
+  const [fees, setFees] = useState([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
 
+  const [newName, setNewName] = useState('');
+  const [newDate, setNewDate] = useState('');
+  const [newAmount, setNewAmount] = useState('');
+
   useEffect(() => {
     const m = months.find(x => x._id === activeId);
-    if (m) setFee(m.shippingFee || '');
+    if (m) {
+      if (m.shippingFees && m.shippingFees.length > 0) {
+        setFees(m.shippingFees);
+      } else if (m.shippingFee) { // fallback cho dữ liệu cũ (chỉ có 1 số tổng)
+        setFees([{ name: 'Cước vận chuyển chung', date: '', amount: m.shippingFee }]);
+      } else {
+        setFees([]);
+      }
+    }
     setMsg('');
   }, [months, activeId]);
 
-  async function save() {
+  async function saveFees(newFees) {
     if (!activeId) return;
     setBusy(true); setMsg('');
     try {
       const res = await fetch(`/api/months/${activeId}`, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ shippingFee: Number(fee) || 0 })
+        body: JSON.stringify({ shippingFees: newFees, shippingFee: 0 })
       });
       if (!res.ok) throw new Error('Lỗi');
-      setMsg('✓ Đã lưu cước vận chuyển');
+      setMsg('✓ Đã lưu thay đổi');
       onChange();
     } catch(e) {
       setMsg('❌ Lỗi lưu dữ liệu');
@@ -271,22 +283,80 @@ function ShippingFeePanel({ months, activeId, onChange }) {
     }
   }
 
+  function handleAdd(e) {
+    e.preventDefault();
+    if (!newName.trim() || !newAmount) return;
+    const item = {
+      name: newName.trim(),
+      date: newDate.trim(),
+      amount: Number(newAmount) || 0
+    };
+    const updated = [...fees, item];
+    setNewName(''); setNewDate(''); setNewAmount('');
+    saveFees(updated);
+  }
+
+  function handleRemove(idx) {
+    if (!confirm('Xóa khoản cước này?')) return;
+    const updated = fees.filter((_, i) => i !== idx);
+    saveFees(updated);
+  }
+
+  const fmt = n => (n || n === 0) ? Number(n).toLocaleString('vi-VN') : '';
+
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
       <h3 className="font-semibold text-brand-700 mb-3 text-sm flex items-center gap-1.5">
-        <span>🚚</span> Cước vận chuyển đơn hàng (Tháng này)
+        <span>🚚</span> Danh sách cước vận chuyển đơn hàng (Tháng này)
       </h3>
-      <div className="flex gap-2">
-        <input type="number" value={fee} onChange={e => setFee(e.target.value)} 
-          placeholder="Nhập số tiền..."
+      
+      {fees.length > 0 && (
+        <div className="mb-4 bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
+          <table className="w-full text-xs text-left">
+            <thead className="bg-slate-100 text-slate-600">
+              <tr>
+                <th className="p-2 w-1/3">Tên / Đơn hàng</th>
+                <th className="p-2 w-1/4">Ngày</th>
+                <th className="p-2 text-right w-1/4">Số tiền</th>
+                <th className="p-2 w-12 text-center">Xóa</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {fees.map((f, idx) => (
+                <tr key={idx} className="hover:bg-white transition-colors">
+                  <td className="p-2 font-medium text-slate-700">{f.name}</td>
+                  <td className="p-2 text-slate-500">{f.date || '-'}</td>
+                  <td className="p-2 text-right font-semibold text-rose-600">{fmt(f.amount)}</td>
+                  <td className="p-2 text-center">
+                    <button onClick={() => handleRemove(idx)} disabled={busy} className="text-slate-400 hover:text-red-500 p-1">✕</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <form onSubmit={handleAdd} className="flex gap-2 flex-col sm:flex-row">
+        <input type="text" value={newName} onChange={e => setNewName(e.target.value)} 
+          placeholder="Tên đơn hàng..." required disabled={busy || !activeId}
           className="w-full border border-slate-300 rounded-md px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
-        <button onClick={save} disabled={busy || !activeId} className="btn shrink-0">
-          {busy ? 'Đang lưu...' : 'Lưu lại'}
+        <div className="flex gap-2 w-full sm:w-auto">
+          <input type="text" value={newDate} onChange={e => setNewDate(e.target.value)} 
+            placeholder="Ngày (Tùy chọn)" disabled={busy || !activeId}
+            className="w-1/3 sm:w-24 border border-slate-300 rounded-md px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
+          <input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} 
+            placeholder="Số tiền..." required disabled={busy || !activeId}
+            className="w-2/3 sm:w-32 border border-slate-300 rounded-md px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
+        </div>
+        <button type="submit" disabled={busy || !activeId} className="btn shrink-0 text-sm py-1.5">
+          {busy ? 'Đang thêm...' : 'Thêm'}
         </button>
-      </div>
+      </form>
+
       {msg && <p className={`text-xs mt-2 font-medium ${msg.includes('❌') ? 'text-rose-600' : 'text-emerald-600'}`}>{msg}</p>}
       <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-        * Số tiền này sẽ tự động được trừ đi vào <b>Tổng lãi</b> trên trang Tổng hợp.
+        * Tổng số tiền này sẽ tự động được cộng dồn và trừ đi vào <b>Tổng lãi</b> trên trang Tổng hợp.
       </p>
     </div>
   );
