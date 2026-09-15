@@ -55,6 +55,12 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {data?.shippingFee > 0 && (
+        <div className="text-right text-sm text-slate-500 italic">
+          * Tổng lãi đã trừ đi Cước vận chuyển: <span className="font-semibold text-rose-500">{fmt(data.shippingFee)}</span>
+        </div>
+      )}
+
       {data?.alerts?.length > 0 && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <h2 className="font-semibold text-red-700 flex items-center gap-2 mb-3">

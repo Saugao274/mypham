@@ -12,6 +12,7 @@ const MonthSchema = new mongoose.Schema(
     month: { type: Number, required: true, min: 1, max: 12 },
     label: { type: String, required: true }, // e.g. "Tháng 4/2025"
     note: { type: String, default: '' },
+    shippingFee: { type: Number, default: 0 },
     purchases: { type: [PurchaseSchema], default: [] },
   },
   { timestamps: true }

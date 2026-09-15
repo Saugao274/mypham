@@ -10,7 +10,10 @@ export default function ManagePage() {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <MonthManager months={months} onChange={reload} onSelect={setMonthId} activeId={monthId} />
-      <ImportPanel months={months} activeId={monthId} onImported={reload} />
+      <div className="space-y-4">
+        <ImportPanel months={months} activeId={monthId} onImported={reload} />
+        <ShippingFeePanel months={months} activeId={monthId} onChange={reload} />
+      </div>
       <div className="space-y-4">
         <CarryDebtPanel months={months} activeId={monthId} onImported={reload} />
         <ExportPanel months={months} activeId={monthId} />
@@ -237,6 +240,58 @@ function ExportPanel({ months, activeId }) {
     </div>
   );
 }
+
+function ShippingFeePanel({ months, activeId, onChange }) {
+  const [fee, setFee] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  useEffect(() => {
+    const m = months.find(x => x._id === activeId);
+    if (m) setFee(m.shippingFee || '');
+    setMsg('');
+  }, [months, activeId]);
+
+  async function save() {
+    if (!activeId) return;
+    setBusy(true); setMsg('');
+    try {
+      const res = await fetch(`/api/months/${activeId}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ shippingFee: Number(fee) || 0 })
+      });
+      if (!res.ok) throw new Error('Lỗi');
+      setMsg('✓ Đã lưu cước vận chuyển');
+      onChange();
+    } catch(e) {
+      setMsg('❌ Lỗi lưu dữ liệu');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+      <h3 className="font-semibold text-brand-700 mb-3 text-sm flex items-center gap-1.5">
+        <span>🚚</span> Cước vận chuyển đơn hàng (Tháng này)
+      </h3>
+      <div className="flex gap-2">
+        <input type="number" value={fee} onChange={e => setFee(e.target.value)} 
+          placeholder="Nhập số tiền..."
+          className="w-full border border-slate-300 rounded-md px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
+        <button onClick={save} disabled={busy || !activeId} className="btn shrink-0">
+          {busy ? 'Đang lưu...' : 'Lưu lại'}
+        </button>
+      </div>
+      {msg && <p className={`text-xs mt-2 font-medium ${msg.includes('❌') ? 'text-rose-600' : 'text-emerald-600'}`}>{msg}</p>}
+      <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+        * Số tiền này sẽ tự động được trừ đi vào <b>Tổng lãi</b> trên trang Tổng hợp.
+      </p>
+    </div>
+  );
+}
+
 function CarryDebtPanel({ months, activeId, onImported }) {
   const [sourceId, setSourceId] = useState('');
   const [targetId, setTargetId] = useState('');

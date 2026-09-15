@@ -38,6 +38,10 @@ export async function GET(req, { params }) {
     const purchases = m.purchases || [];
     let tongMua = purchases.reduce((sum, p) => sum + (p.amount || 0), 0);
     
+    // Cước vận chuyển của tháng
+    const shippingFee = m.shippingFee || 0;
+    tongLai -= shippingFee;
+    
     // Chênh lệch (lợi nhuận ròng) = Tổng lãi gộp - Tổng chi phí (hàng lỗi/biếu)
     const chenhLech = tongLai - tongChi;
     

@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 // Bám sát các cột trong sheet gốc:
 // TT | TÊN SP | Loại hàng | Sl | Giá mua | Tổng vốn | SL còn | Vốn còn |
 // Giá bán | Sl bán | Tổng bán | Tổng lãi | Sl chi | Tổng chi |
-// Date | Diễn giải | Giảm/cước | Nhập
+// Date | Diễn giải | Giảm/Tặng | Nhập
 //
 // Các cột "Tổng vốn / Vốn còn / Tổng bán / Tổng lãi / Tổng chi" được TÍNH TỰ ĐỘNG
 // (không lưu trong DB) để tránh sai lệch dữ liệu.

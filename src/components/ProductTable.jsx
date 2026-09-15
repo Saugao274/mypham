@@ -249,7 +249,7 @@ export default function ProductTable({ monthId, category, items, loading, onChan
                 : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
             }`}
             onClick={toggleHideExtra}
-            title="Ẩn/hiện các cột: Báo động, Diễn giải, Giảm/cước, Nhập"
+            title="Ẩn/hiện các cột: Báo động, Diễn giải, Giảm/Tặng, Nhập"
           >
             {hideExtra ? '👁️ Hiện lại cột phụ' : '🕶️ Ẩn cột phụ (Báo động, Diễn giải...)'}
           </button>
@@ -283,7 +283,7 @@ export default function ProductTable({ monthId, category, items, loading, onChan
               {renderTh('date', 'Date', 'min-w-[80px]')}
               {!hideExtra && renderTh('baoDongMonths', 'Báo động', 'text-center min-w-[70px] text-[11px] leading-tight')}
               {!hideExtra && renderTh('dienGiai', 'Diễn giải', 'min-w-[160px]')}
-              {!hideExtra && renderTh('giamCuoc', 'Giảm/cước', 'text-right min-w-[80px]')}
+              {!hideExtra && renderTh('giamCuoc', 'Giảm/Tặng', 'text-right min-w-[80px]')}
               {!hideExtra && renderTh('nhap', 'Nhập', 'min-w-[100px]')}
               <th></th>
             </tr>

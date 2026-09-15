@@ -90,13 +90,17 @@ export async function GET(_req, { params }) {
   
   alerts.sort((a, b) => a.remain - b.remain);
 
+  const monthDoc = await import('@/models/Month').then(m => m.default.findById(monthId));
+  const shippingFee = monthDoc?.shippingFee || 0;
+
   return NextResponse.json({
     rows,
     alerts,
+    shippingFee,
     total: {
       tongVon: round2(total.tongVon),
       tongBan: round2(total.tongBan),
-      tongLai: round2(total.tongLai),
+      tongLai: round2(total.tongLai - shippingFee), // subtract shippingFee from total profit
       tongChi: round2(total.tongChi),
       vonCon:  round2(total.vonCon),
       tongNo:  round2(tongNo),
