@@ -16,24 +16,37 @@ function parseDienGiai(dienGiai) {
     p = p.trim();
     if (!p) continue;
     
-    // Tìm phần số/toán tử ở cuối chuỗi. Ví dụ: "bé 1", "dũng", "ngọc ý 2", "hằng 2+3"
-    const match = p.match(/^(.*?)\s*([\d\+\s]+)$/);
-    if (match && match[1]) {
-      const name = match[1].trim();
-      let qty = 1;
-      try {
-        const expr = match[2].replace(/\s/g, '');
-        if (/^[\d\+]+$/.test(expr)) {
-          // Tính tổng biểu thức "2+3"
-          qty = expr.split('+').reduce((sum, n) => sum + parseInt(n || 0, 10), 0);
-        }
-      } catch (e) {
-        qty = 1;
-      }
-      results.push({ name, qty });
+    let str = p;
+    let isFree = false;
+    let discountVal = 0;
+
+    // 1. Check for "tặng"
+    if (/tặng/i.test(str)) {
+      isFree = true;
+      str = str.replace(/\(?tặng\)?/gi, '').trim();
     } else {
-      // Nếu không khớp (không có số ở cuối), mặc định số lượng = 1
-      results.push({ name: p, qty: 1 });
+      // 2. Check for "-50" or "-50k" at the end
+      const discMatch = str.match(/(?:-|\()\s*(\d+)[kK]?\s*\)?$/);
+      if (discMatch) {
+        discountVal = parseInt(discMatch[1], 10);
+        str = str.substring(0, discMatch.index).trim();
+      }
+    }
+
+    // 3. Extract quantity at the end
+    let name = str;
+    let qty = 1;
+    const qtyMatch = str.match(/^(.*?)\s+([\d\+]+)$/);
+    if (qtyMatch) {
+      name = qtyMatch[1].trim();
+      const expr = qtyMatch[2];
+      qty = expr.split('+').reduce((s, n) => s + parseInt(n || 0, 10), 0);
+    }
+
+    if (name) {
+      // Chuẩn hóa tên: In hoa chữ cái đầu cho đẹp
+      name = name.charAt(0).toUpperCase() + name.slice(1);
+      results.push({ name, qty, isFree, discountVal });
     }
   }
   return results;
@@ -58,11 +71,6 @@ export async function GET(req) {
     if (!p.dienGiai) continue;
     const parsed = parseDienGiai(p.dienGiai);
     
-    // Tính tổng số lượng đã parse để chia đều giảm cước
-    const totalParsedQty = parsed.reduce((sum, item) => sum + item.qty, 0) || 1;
-    const giamCuoc = p.giamCuoc || 0;
-    const discountPerItem = giamCuoc / totalParsedQty;
-    
     for (const item of parsed) {
       if (!item.name) continue;
       
@@ -76,8 +84,13 @@ export async function GET(req) {
       }
       
       const price = p.giaBan || 0;
-      // Thành tiền = (SL * Đơn giá) - Giảm cước tương ứng
-      const total = round2((item.qty * price) - (item.qty * discountPerItem));
+      let discount = item.discountVal || 0;
+      if (item.isFree) {
+        discount = item.qty * price; // Miễn phí 100%
+      }
+      
+      let total = (item.qty * price) - discount;
+      if (total < 0) total = 0; // Tránh âm tiền nếu lỡ nhập giảm giá lớn hơn giá trị
       
       customerMap[key].purchases.push({
         _id: p._id.toString() + '_' + key,
@@ -86,7 +99,7 @@ export async function GET(req) {
         date: p.date,
         qty: item.qty,
         price: price,
-        discount: round2(item.qty * discountPerItem),
+        discount: discount,
         total: total
       });
       

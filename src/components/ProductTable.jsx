@@ -410,7 +410,46 @@ function NewRow({ items, row, setRow, showLoai, showCalculated, hideExtra, total
         {showCalculated && <td className="text-right text-slate-400 bg-slate-50">{fmt(round2((row.slChi || 0) * (row.giaMua || 0)))}</td>}
         <td><input className="cell-input text-center" value={row.date} onChange={e => upd('date', e.target.value)} placeholder="mm/yy" /></td>
         {!hideExtra && <NumInput value={row.baoDongMonths} onChange={v => upd('baoDongMonths', v)} />}
-        {!hideExtra && <td><AutoTextArea value={row.dienGiai} onChange={v => upd('dienGiai', v)} /></td>}
+        {!hideExtra && (
+          <td className="relative group">
+            <AutoTextArea value={row.dienGiai} onChange={v => upd('dienGiai', v)} />
+            {(() => {
+              const dg = row.dienGiai;
+              if (typeof dg !== 'string' || !dg.trim()) return null;
+              const parts = dg.split(/[,\n]/);
+              let parsedQty = 0;
+              for (let p of parts) {
+                p = p.trim();
+                if (!p) continue;
+                let str = p;
+                if (/tặng/i.test(str)) {
+                  str = str.replace(/\(?tặng\)?/gi, '').trim();
+                } else {
+                  const discMatch = str.match(/(?:-|\()\s*(\d+)[kK]?\s*\)?$/);
+                  if (discMatch) str = str.substring(0, discMatch.index).trim();
+                }
+                const qtyMatch = str.match(/^(.*?)\s+([\d\+]+)$/);
+                if (qtyMatch) {
+                  const nums = qtyMatch[2].split('+');
+                  let sum = 0;
+                  for (const n of nums) sum += parseInt(n || 0, 10);
+                  parsedQty += sum;
+                } else {
+                  parsedQty += 1;
+                }
+              }
+              const expected = (Number(row.slBan) || 0) + (Number(row.slChi) || 0);
+              if (parsedQty > 0 && parsedQty !== expected) {
+                return (
+                  <div className="text-[10px] font-bold text-red-500 bg-red-50 px-1 mt-0.5 rounded shadow-sm">
+                    ⚠️ SL lệch: {parsedQty} ≠ {expected}
+                  </div>
+                );
+              }
+              return null;
+            })()}
+          </td>
+        )}
         {!hideExtra && <NumInput value={row.giamCuoc} onChange={v => upd('giamCuoc', v)} />}
         {!hideExtra && <td><AutoTextArea value={row.nhap} onChange={v => upd('nhap', v)} /></td>}
         <td>
@@ -510,7 +549,46 @@ function EditableRow({ index, product, showLoai, showCalculated, hideExtra, onCh
       {showCalculated && <td className="text-right bg-slate-50 text-red-600">{fmt(derived.tongChi)}</td>}
       <td className="p-1"><input className={dateClass} value={local.date || ''} onChange={e => upd('date', e.target.value)} title={remain !== null ? `Còn ${remain} tháng` : ''} /></td>
       {!hideExtra && <NumCell value={local.baoDongMonths ?? 12} onChange={v => upd('baoDongMonths', v)} />}
-      {!hideExtra && <td><AutoTextArea value={local.dienGiai || ''} onChange={v => upd('dienGiai', v)} /></td>}
+      {!hideExtra && (
+        <td className="relative group">
+          <AutoTextArea value={local.dienGiai || ''} onChange={v => upd('dienGiai', v)} />
+          {(() => {
+            const dg = local.dienGiai;
+            if (typeof dg !== 'string' || !dg.trim()) return null;
+            const parts = dg.split(/[,\n]/);
+            let parsedQty = 0;
+            for (let p of parts) {
+              p = p.trim();
+              if (!p) continue;
+              let str = p;
+              if (/tặng/i.test(str)) {
+                str = str.replace(/\(?tặng\)?/gi, '').trim();
+              } else {
+                const discMatch = str.match(/(?:-|\()\s*(\d+)[kK]?\s*\)?$/);
+                if (discMatch) str = str.substring(0, discMatch.index).trim();
+              }
+              const qtyMatch = str.match(/^(.*?)\s+([\d\+]+)$/);
+              if (qtyMatch) {
+                const nums = qtyMatch[2].split('+');
+                let sum = 0;
+                for (const n of nums) sum += parseInt(n || 0, 10);
+                parsedQty += sum;
+              } else {
+                parsedQty += 1;
+              }
+            }
+            const expected = (Number(local.slBan) || 0) + (Number(local.slChi) || 0);
+            if (parsedQty > 0 && parsedQty !== expected) {
+              return (
+                <div className="text-[10px] font-bold text-red-500 bg-red-50 px-1 mt-0.5 rounded shadow-sm">
+                  ⚠️ SL lệch: {parsedQty} ≠ {expected}
+                </div>
+              );
+            }
+            return null;
+          })()}
+        </td>
+      )}
       {!hideExtra && <NumCell value={local.giamCuoc} onChange={v => upd('giamCuoc', v)} />}
       {!hideExtra && <td><AutoTextArea value={local.nhap || ''} onChange={v => upd('nhap', v)} /></td>}
       <td className="text-center">
