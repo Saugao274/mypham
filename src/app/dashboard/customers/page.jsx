@@ -12,6 +12,7 @@ export default function CustomersPage() {
   const [search, setSearch] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [filterMonth, setFilterMonth] = useState('all');
+  const [hideDiscount, setHideDiscount] = useState(false);
   
   const { months } = useCurrentMonth();
 
@@ -50,7 +51,14 @@ export default function CustomersPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-slate-600">Lọc theo:</span>
+          <button 
+            onClick={() => setHideDiscount(!hideDiscount)}
+            className="border border-slate-300 rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 bg-white hover:bg-slate-50 transition-colors hidden sm:block"
+            title="Ẩn giá trị Giảm/Tặng để chụp màn hình gửi khách"
+          >
+            {hideDiscount ? '👁 Hiện Giảm/Tặng' : '🙈 Ẩn Giảm/Tặng'}
+          </button>
+          <span className="text-sm font-medium text-slate-600 ml-2">Lọc theo:</span>
           <select 
             value={filterMonth}
             onChange={e => setFilterMonth(e.target.value)}
@@ -129,7 +137,7 @@ export default function CustomersPage() {
                       <th className="p-4 font-semibold w-1/6">Tháng</th>
                       <th className="p-4 font-semibold text-right w-1/12">SL</th>
                       <th className="p-4 font-semibold text-right w-1/6">Đơn giá</th>
-                      <th className="p-4 font-semibold text-right w-1/6">Giảm/Tặng</th>
+                      {!hideDiscount && <th className="p-4 font-semibold text-right w-1/6">Giảm/Tặng</th>}
                       <th className="p-4 font-semibold text-right w-1/6">Thành tiền</th>
                     </tr>
                   </thead>
@@ -143,7 +151,7 @@ export default function CustomersPage() {
                         </td>
                         <td className="p-4 text-right font-medium text-slate-700">{fmt(p.qty)}</td>
                         <td className="p-4 text-right text-slate-600">{fmtMoney(p.price)}</td>
-                        <td className="p-4 text-right text-rose-500 text-xs">{p.discount > 0 ? `-${fmtMoney(p.discount)}` : ''}</td>
+                        {!hideDiscount && <td className="p-4 text-right text-rose-500 text-xs">{p.discount > 0 ? `-${fmtMoney(p.discount)}` : ''}</td>}
                         <td className="p-4 text-right font-semibold text-emerald-600">{fmtMoney(p.total)}</td>
                       </tr>
                     ))}
