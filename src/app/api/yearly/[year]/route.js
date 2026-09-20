@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import Month from '@/models/Month';
 import Product from '@/models/Product';
-import { getEffectiveSlBan } from '@/lib/giftHelper';
+import { parseDienGiaiForStats } from '@/lib/giftHelper';
 
 function round2(n) { return Math.round(n * 100) / 100; }
 
@@ -29,9 +29,13 @@ export async function GET(req, { params }) {
     let vonCon = 0;
     
     for (const p of products) {
-      const effectiveSlBan = getEffectiveSlBan(p);
-      tongBan += effectiveSlBan * (p.giaBan || 0);
-      tongLai += effectiveSlBan * (p.giaBan || 0) - (p.slBan || 0) * (p.giaMua || 0) - (p.giamCuoc || 0);
+      const { giftQty, totalDiscount } = parseDienGiaiForStats(p.dienGiai);
+      const slBan = Number(p.slBan) || 0;
+      const giftInBan = Math.min(giftQty, slBan);
+      const effectiveSlBan = slBan - giftInBan;
+      
+      tongBan += effectiveSlBan * (p.giaBan || 0) - totalDiscount;
+      tongLai += effectiveSlBan * (p.giaBan || 0) - totalDiscount - slBan * (p.giaMua || 0) - (p.giamCuoc || 0);
       tongChi += (p.slChi || 0) * (p.giaMua || 0);
       vonCon += (p.slCon || 0) * (p.giaMua || 0);
     }

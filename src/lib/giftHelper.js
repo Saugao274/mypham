@@ -1,53 +1,62 @@
 /**
- * Parse diễn giải để tính số lượng tặng (gift quantity).
+ * Parse diễn giải để tính số lượng tặng (gift quantity) và tổng tiền giảm giá.
  * Dùng chung cho tất cả các nơi tính tổng hợp.
  *
  * @param {string} dienGiai - Nội dung cột diễn giải
- * @returns {number} Tổng số lượng tặng
+ * @returns {object} { giftQty, totalDiscount }
  */
-export function getGiftQty(dienGiai) {
-  if (!dienGiai || typeof dienGiai !== 'string') return 0;
+export function parseDienGiaiForStats(dienGiai) {
+  let giftQty = 0;
+  let totalDiscount = 0;
+  if (!dienGiai || typeof dienGiai !== 'string') return { giftQty, totalDiscount };
 
   const parts = dienGiai.split(/[,\n]/);
-  let giftQty = 0;
 
   for (let p of parts) {
     p = p.trim();
     if (!p) continue;
 
-    // Chỉ tính entry có chữ "tặng"
-    if (!/tặng/i.test(p)) continue;
-
-    // Bỏ chữ "tặng" ra để lấy số lượng
-    let str = p.replace(/\(?tặng\)?/gi, '').trim();
-
-    // Tách tên và số lượng: "Hiếu 2" → qty = 2
-    const qtyMatch = str.match(/^(.*?)\s+([\d\+]+)$/);
-    if (qtyMatch) {
-      const nums = qtyMatch[2].split('+');
-      let sum = 0;
-      for (const n of nums) sum += parseInt(n || 0, 10);
-      giftQty += sum;
+    // Tính tặng
+    if (/tặng/i.test(p)) {
+      let str = p.replace(/\(?tặng\)?/gi, '').trim();
+      const qtyMatch = str.match(/^(.*?)\s+([\d\+]+)$/);
+      if (qtyMatch) {
+        const nums = qtyMatch[2].split('+');
+        let sum = 0;
+        for (const n of nums) sum += parseInt(n || 0, 10);
+        giftQty += sum;
+      } else {
+        giftQty += 1;
+      }
     } else {
-      // Không có số lượng → mặc định 1
-      giftQty += 1;
+      // Tính giảm giá (vd: -20k, -50)
+      const discMatch = p.match(/(?:-|\()\s*(\d+)[kK]?\s*\)?$/);
+      if (discMatch) {
+        totalDiscount += parseInt(discMatch[1], 10);
+      }
     }
   }
 
-  return giftQty;
+  return { giftQty, totalDiscount };
+}
+
+export function getGiftQty(dienGiai) {
+  return parseDienGiaiForStats(dienGiai).giftQty;
 }
 
 /**
- * Tính SL bán thực (sau khi trừ tặng) dựa vào dienGiai, slBan, slChi.
- * Logic: gift ưu tiên nằm trong slBan trước.
- *
- * @param {object} p - Product object cần có: dienGiai, slBan, slChi
- * @returns {number} effectiveSlBan - SL bán thực sự (đã trừ tặng)
+ * Tính SL bán thực (sau khi trừ tặng) dựa vào dienGiai, slBan.
  */
 export function getEffectiveSlBan(p) {
-  const giftQty = getGiftQty(p.dienGiai);
+  const { giftQty } = parseDienGiaiForStats(p.dienGiai);
   const slBan = Number(p.slBan) || 0;
-  // Tặng nằm trong slBan (ưu tiên), tối đa = slBan
   const giftInBan = Math.min(giftQty, slBan);
   return slBan - giftInBan;
+}
+
+/**
+ * Lấy tổng tiền giảm giá khách hàng từ diễn giải.
+ */
+export function getDiscountFromDienGiai(p) {
+  return parseDienGiaiForStats(p.dienGiai).totalDiscount;
 }

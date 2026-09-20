@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { getEffectiveSlBan } from '@/lib/giftHelper';
+import { parseDienGiaiForStats } from '@/lib/giftHelper';
 
 function suggestCategory(name, items) {
   if (!name || !items || !items.length) return "";
@@ -70,13 +70,17 @@ const round2 = n => Math.round(n * 100) / 100;
 const fmt = n => (n || n === 0) ? Number(n).toLocaleString('vi-VN') : '';
 
 function computeDerived(p) {
-  const effectiveSlBan = getEffectiveSlBan(p);
+  const { giftQty, totalDiscount } = parseDienGiaiForStats(p.dienGiai);
+  const slBan = Number(p.slBan) || 0;
+  const giftInBan = Math.min(giftQty, slBan);
+  const effectiveSlBan = slBan - giftInBan;
+  
   const tongVon = round2((p.sl || 0) * (p.giaMua || 0));
   const vonCon = round2((p.slCon || 0) * (p.giaMua || 0));
-  const tongBan = round2(effectiveSlBan * (p.giaBan || 0));
+  const tongBan = round2(effectiveSlBan * (p.giaBan || 0) - totalDiscount);
   const tongChi = round2((p.slChi || 0) * (p.giaMua || 0));
-  // Doanh thu chỉ tính bán thực, nhưng chi phí tính hết slBan (hàng tặng vẫn mất vốn)
-  const tongLai = round2(tongBan - (p.slBan || 0) * (p.giaMua || 0) - (p.giamCuoc || 0));
+  // Doanh thu đã trừ totalDiscount, chi phí tính hết slBan, trừ thêm giamCuoc
+  const tongLai = round2(effectiveSlBan * (p.giaBan || 0) - totalDiscount - slBan * (p.giaMua || 0) - (p.giamCuoc || 0));
   return { tongVon, vonCon, tongBan, tongLai, tongChi };
 }
 
