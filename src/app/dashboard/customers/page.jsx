@@ -162,9 +162,16 @@ export default function CustomersPage() {
                   <h2 className="text-lg font-bold text-slate-800">Khách hàng: <span className="text-brand-600">{selectedCustomer.name}</span></h2>
                   <p className="text-sm text-slate-500 mt-1">Đã mua tổng cộng {selectedCustomer.purchases.length} mã sản phẩm.</p>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex flex-col items-end">
                   <div className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Tổng chi tiêu</div>
-                  <div className="text-2xl font-bold text-emerald-600">{fmtMoney(selectedCustomer.totalSpent)} ₫</div>
+                  <div className="text-2xl font-bold text-emerald-600 mb-2">{fmtMoney(selectedCustomer.totalSpent)} ₫</div>
+                  <button
+                    onClick={handleTransferToDebt}
+                    disabled={isTransferring || selectedCustomer.totalSpent === 0}
+                    className="text-xs px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 rounded-md font-semibold transition-colors disabled:opacity-50"
+                  >
+                    {isTransferring ? 'Đang chuyển...' : 'Ghi vào Sổ Nợ 💸'}
+                  </button>
                 </div>
               </div>
               
