@@ -15,7 +15,7 @@ export default function CustomersPage() {
   const [hideDiscount, setHideDiscount] = useState(false);
   const [isTransferring, setIsTransferring] = useState(false);
   
-  const { monthId: globalMonthId, months } = useCurrentMonth();
+  const { monthId: globalMonthId, months, reload: reloadMonths } = useCurrentMonth();
 
   const handleTransferToDebt = async () => {
     if (!selectedCustomer) return;
@@ -75,6 +75,7 @@ export default function CustomersPage() {
   };
 
   useEffect(() => {
+    reloadMonths();
     setLoading(true);
     fetch(`/api/customers?t=${Date.now()}&monthId=${filterMonth}`)
       .then(r => r.json())
