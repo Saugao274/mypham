@@ -113,14 +113,20 @@ function getMonthsRemaining(dateStr) {
   return (year - curYear) * 12 + (month - curMonth);
 }
 
-export default function ProductTable({ monthId, category, items, loading, onChanged, onRowChange }) {
+export default function ProductTable({ monthId, category, items, loading, onChanged, onRowChange, initialSearch }) {
   const [adding, setAdding] = useState(false);
   const [newRow, setNewRow] = useState(makeEmpty());
 
   const [sortConfig, setSortConfig] = useState({ key: null, dir: 'asc' });
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState(initialSearch ? { ten: initialSearch } : {});
   const [showCalculated, setShowCalculated] = useState(false);
   const [hideExtra, setHideExtra] = useState(false);
+
+  useEffect(() => {
+    if (initialSearch) {
+      setFilters(prev => ({ ...prev, ten: initialSearch }));
+    }
+  }, [initialSearch]);
 
   useEffect(() => {
     const saved = localStorage.getItem('MYPHAM_HIDE_EXTRA_COLS');

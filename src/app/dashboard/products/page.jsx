@@ -1,11 +1,25 @@
 'use client';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useCurrentMonth } from '@/lib/useCurrentMonth';
 import ProductTable from '@/components/ProductTable';
 import AiBillScannerModal from '@/components/AiBillScannerModal';
 
 export default function ProductsPage() {
-  const { monthId, months, reload } = useCurrentMonth();
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Đang tải...</div>}>
+      <ProductsPageContent />
+    </Suspense>
+  );
+}
+
+function ProductsPageContent() {
+  const { monthId, months, reload, setMonthId } = useCurrentMonth();
+  const searchParams = useSearchParams();
+  const initialCat = searchParams.get('cat');
+  const initialSearch = searchParams.get('search');
+  const initialMonthId = searchParams.get('monthId');
+  
   const [categories, setCategories] = useState([]);
   const [activeCat, setActiveCat] = useState(null);
   const [products, setProducts] = useState([]);
@@ -16,12 +30,19 @@ export default function ProductsPage() {
   const dragCounter = useRef(0);
 
   useEffect(() => { reload(); }, []);
+  
+  useEffect(() => {
+    if (initialMonthId && initialMonthId !== monthId) {
+      setMonthId(initialMonthId);
+    }
+  }, [initialMonthId, monthId, setMonthId]);
+
   useEffect(() => {
     fetch('/api/categories').then(r => r.json()).then(list => {
       setCategories(list);
-      setActiveCat(prev => prev || list[0]?.key);
+      setActiveCat(initialCat || list[0]?.key);
     }).catch(console.error);
-  }, []);
+  }, [initialCat]);
 
   async function loadProducts() {
     if (!monthId) return;
@@ -225,6 +246,7 @@ export default function ProductsPage() {
           category={cat}
           items={items}
           loading={loading}
+          initialSearch={initialSearch}
           onChanged={loadProducts}
           onRowChange={(id, nextData) => {
             setProducts(prev => prev.map(p => p._id === id ? { ...p, ...nextData } : p));

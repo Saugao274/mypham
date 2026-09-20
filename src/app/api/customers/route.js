@@ -95,6 +95,8 @@ export async function GET(req) {
       customerMap[key].purchases.push({
         _id: p._id.toString() + '_' + key,
         productName: p.ten,
+        categoryKey: p.categoryKey,
+        monthId: p.monthId ? p.monthId._id.toString() : null,
         monthLabel: p.monthId ? p.monthId.label : 'Không rõ',
         date: p.date,
         qty: item.qty,

@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 import { useCurrentMonth } from '@/lib/useCurrentMonth';
 
@@ -215,7 +216,15 @@ export default function CustomersPage() {
                       const hideGiftValue = hideDiscount && isGift;
                       return (
                         <tr key={i} className="hover:bg-slate-50">
-                          <td className="p-4 font-medium text-slate-800">{p.productName}</td>
+                          <td className="p-4 font-medium text-slate-800">
+                            <Link 
+                              href={`/dashboard/products?monthId=${p.monthId || ''}&cat=${p.categoryKey || ''}&search=${encodeURIComponent(p.productName)}`}
+                              className="hover:text-brand-600 hover:underline transition-colors block"
+                              title="Bấm để xem sản phẩm này"
+                            >
+                              {p.productName}
+                            </Link>
+                          </td>
                           <td className="p-4 text-slate-500">
                             {p.monthLabel}
                             {p.date && <div className="text-xs text-slate-400">Ngày: {p.date}</div>}
