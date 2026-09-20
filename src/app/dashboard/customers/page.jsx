@@ -136,31 +136,39 @@ export default function CustomersPage() {
                       <th className="p-4 font-semibold w-1/4">Tên sản phẩm</th>
                       <th className="p-4 font-semibold w-1/6">Tháng</th>
                       <th className="p-4 font-semibold text-right w-1/12">SL</th>
-                      {!hideDiscount && <th className="p-4 font-semibold text-right w-1/6">Đơn giá</th>}
-                      {!hideDiscount && <th className="p-4 font-semibold text-right w-1/6">Giảm/Tặng</th>}
+                      <th className="p-4 font-semibold text-right w-1/6">Đơn giá</th>
+                      <th className="p-4 font-semibold text-right w-1/6">Giảm/Tặng</th>
                       <th className="p-4 font-semibold text-right w-1/6">Thành tiền</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {selectedCustomer.purchases.map((p, i) => (
-                      <tr key={i} className="hover:bg-slate-50">
-                        <td className="p-4 font-medium text-slate-800">{p.productName}</td>
-                        <td className="p-4 text-slate-500">
-                          {p.monthLabel}
-                          {p.date && <div className="text-xs text-slate-400">Ngày: {p.date}</div>}
-                        </td>
-                        <td className="p-4 text-right font-medium text-slate-700">{fmt(p.qty)}</td>
-                        {!hideDiscount && <td className="p-4 text-right text-slate-600">{fmtMoney(p.price)}</td>}
-                        {!hideDiscount && <td className="p-4 text-right text-rose-500 text-xs">{p.discount > 0 ? `-${fmtMoney(p.discount)}` : ''}</td>}
-                        <td className="p-4 text-right font-semibold text-emerald-600">
-                          {hideDiscount && p.total === 0 ? (
-                            <span className="text-brand-600 italic">🎁 Tặng</span>
-                          ) : (
-                            fmtMoney(p.total)
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                    {selectedCustomer.purchases.map((p, i) => {
+                      const isGift = p.total === 0;
+                      const hideGiftValue = hideDiscount && isGift;
+                      return (
+                        <tr key={i} className="hover:bg-slate-50">
+                          <td className="p-4 font-medium text-slate-800">{p.productName}</td>
+                          <td className="p-4 text-slate-500">
+                            {p.monthLabel}
+                            {p.date && <div className="text-xs text-slate-400">Ngày: {p.date}</div>}
+                          </td>
+                          <td className="p-4 text-right font-medium text-slate-700">{fmt(p.qty)}</td>
+                          <td className="p-4 text-right text-slate-600">
+                            {hideGiftValue ? '' : fmtMoney(p.price)}
+                          </td>
+                          <td className="p-4 text-right text-rose-500 text-xs">
+                            {hideGiftValue ? '' : (p.discount > 0 ? `-${fmtMoney(p.discount)}` : '')}
+                          </td>
+                          <td className="p-4 text-right font-semibold text-emerald-600">
+                            {hideGiftValue ? (
+                              <span className="text-brand-600 italic">🎁 Tặng</span>
+                            ) : (
+                              fmtMoney(p.total)
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
