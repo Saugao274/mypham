@@ -25,17 +25,33 @@ export default function CustomersPage() {
       return;
     }
     
-    if (!confirm(`Chuyển khách hàng "${selectedCustomer.name}" với số nợ ${fmtMoney(selectedCustomer.totalSpent)} ₫ vào sổ nợ?`)) return;
-
     setIsTransferring(true);
     try {
+      // Check for duplicate
+      const checkRes = await fetch(`/api/debts?monthId=${targetMonth}`);
+      if (checkRes.ok) {
+        const debts = await checkRes.json();
+        const existing = debts.find(d => d.khach.toLowerCase() === selectedCustomer.name.toLowerCase());
+        if (existing) {
+          if (!confirm(`⚠️ Khách hàng "${selectedCustomer.name}" ĐÃ CÓ trong sổ nợ tháng này (số tiền ${fmtMoney(existing.soTien)} ₫). Bạn có chắc chắn muốn tạo THÊM 1 khoản nợ nữa không?`)) {
+            setIsTransferring(false);
+            return;
+          }
+        }
+      }
+
+      if (!confirm(`Chuyển khách hàng "${selectedCustomer.name}" với số nợ ${fmtMoney(selectedCustomer.totalSpent)} ₫ vào sổ nợ?`)) {
+        setIsTransferring(false);
+        return;
+      }
+
       const res = await fetch('/api/debts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           monthId: targetMonth,
           khach: selectedCustomer.name,
-          soTien: selectedCustomer.totalSpent, // Zalo message input format might be actual money or thousands. Wait!
+          soTien: selectedCustomer.totalSpent,
           daThanhToan: 0,
           noTu: '',
           dienGiai: 'Chuyển từ Thống kê khách hàng'
@@ -165,13 +181,15 @@ export default function CustomersPage() {
                 <div className="text-right flex flex-col items-end">
                   <div className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Tổng chi tiêu</div>
                   <div className="text-2xl font-bold text-emerald-600 mb-2">{fmtMoney(selectedCustomer.totalSpent)} ₫</div>
-                  <button
-                    onClick={handleTransferToDebt}
-                    disabled={isTransferring || selectedCustomer.totalSpent === 0}
-                    className="text-xs px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 rounded-md font-semibold transition-colors disabled:opacity-50"
-                  >
-                    {isTransferring ? 'Đang chuyển...' : 'Ghi vào Sổ Nợ 💸'}
-                  </button>
+                  {!hideDiscount && (
+                    <button
+                      onClick={handleTransferToDebt}
+                      disabled={isTransferring || selectedCustomer.totalSpent === 0}
+                      className="text-xs px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 rounded-md font-semibold transition-colors disabled:opacity-50"
+                    >
+                      {isTransferring ? 'Đang kiểm tra...' : 'Ghi vào Sổ Nợ 💸'}
+                    </button>
+                  )}
                 </div>
               </div>
               
