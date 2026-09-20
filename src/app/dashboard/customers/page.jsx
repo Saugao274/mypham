@@ -13,8 +13,47 @@ export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [filterMonth, setFilterMonth] = useState('all');
   const [hideDiscount, setHideDiscount] = useState(false);
+  const [isTransferring, setIsTransferring] = useState(false);
   
-  const { months } = useCurrentMonth();
+  const { monthId: globalMonthId, months } = useCurrentMonth();
+
+  const handleTransferToDebt = async () => {
+    if (!selectedCustomer) return;
+    const targetMonth = filterMonth !== 'all' ? filterMonth : globalMonthId;
+    if (!targetMonth) {
+      alert('Vui lòng chọn hoặc tạo một tháng trước khi ghi nợ!');
+      return;
+    }
+    
+    if (!confirm(`Chuyển khách hàng "${selectedCustomer.name}" với số nợ ${fmtMoney(selectedCustomer.totalSpent)} ₫ vào sổ nợ?`)) return;
+
+    setIsTransferring(true);
+    try {
+      const res = await fetch('/api/debts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          monthId: targetMonth,
+          khach: selectedCustomer.name,
+          soTien: selectedCustomer.totalSpent, // Zalo message input format might be actual money or thousands. Wait!
+          daThanhToan: 0,
+          noTu: '',
+          dienGiai: 'Chuyển từ Thống kê khách hàng'
+        })
+      });
+      if (res.ok) {
+        alert('Đã chuyển thành công vào Sổ Nợ!');
+      } else {
+        const data = await res.json();
+        alert('Lỗi: ' + (data.error || 'Không thể chuyển'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Lỗi mạng, vui lòng thử lại!');
+    } finally {
+      setIsTransferring(false);
+    }
+  };
 
   useEffect(() => {
     setLoading(true);
