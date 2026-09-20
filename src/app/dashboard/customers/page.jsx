@@ -45,6 +45,9 @@ export default function CustomersPage() {
         return;
       }
 
+      const targetMonthDoc = months.find(m => m._id === targetMonth);
+      const noTuLabel = targetMonthDoc ? targetMonthDoc.label : '';
+
       const res = await fetch('/api/debts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -53,7 +56,7 @@ export default function CustomersPage() {
           khach: selectedCustomer.name,
           soTien: selectedCustomer.totalSpent,
           daThanhToan: 0,
-          noTu: '',
+          noTu: noTuLabel,
           dienGiai: 'Chuyển từ Thống kê khách hàng'
         })
       });
