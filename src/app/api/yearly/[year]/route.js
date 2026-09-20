@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import Month from '@/models/Month';
 import Product from '@/models/Product';
+import { getEffectiveSlBan } from '@/lib/giftHelper';
 
 function round2(n) { return Math.round(n * 100) / 100; }
 
@@ -28,8 +29,9 @@ export async function GET(req, { params }) {
     let vonCon = 0;
     
     for (const p of products) {
-      tongBan += (p.slBan || 0) * (p.giaBan || 0);
-      tongLai += (p.slBan || 0) * (p.giaBan || 0) - (p.slBan || 0) * (p.giaMua || 0) - (p.giamCuoc || 0);
+      const effectiveSlBan = getEffectiveSlBan(p);
+      tongBan += effectiveSlBan * (p.giaBan || 0);
+      tongLai += effectiveSlBan * (p.giaBan || 0) - (p.slBan || 0) * (p.giaMua || 0) - (p.giamCuoc || 0);
       tongChi += (p.slChi || 0) * (p.giaMua || 0);
       vonCon += (p.slCon || 0) * (p.giaMua || 0);
     }

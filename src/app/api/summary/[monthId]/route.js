@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import Debt from '@/models/Debt';
 import { CATEGORIES } from '@/lib/categories';
+import { getEffectiveSlBan } from '@/lib/giftHelper';
 
 function round2(n) { return Math.round(n * 100) / 100; }
 
@@ -47,9 +48,11 @@ export async function GET(_req, { params }) {
     let tongVon = 0, tongBan = 0, tongLai = 0, tongChi = 0, vonCon = 0;
     for (const p of products) {
       if (p.categoryKey !== cat.key) continue;
+      const effectiveSlBan = getEffectiveSlBan(p);
       tongVon += (p.sl || 0) * (p.giaMua || 0);
-      tongBan += (p.slBan || 0) * (p.giaBan || 0);
-      tongLai += (p.slBan || 0) * (p.giaBan || 0) - (p.slBan || 0) * (p.giaMua || 0) - (p.giamCuoc || 0);
+      tongBan += effectiveSlBan * (p.giaBan || 0);
+      // Doanh thu chỉ tính bán thực, nhưng chi phí vẫn tính hết slBan (hàng tặng vẫn mất vốn)
+      tongLai += effectiveSlBan * (p.giaBan || 0) - (p.slBan || 0) * (p.giaMua || 0) - (p.giamCuoc || 0);
       tongChi += (p.slChi || 0) * (p.giaMua || 0);
       vonCon  += (p.slCon || 0) * (p.giaMua || 0);
 

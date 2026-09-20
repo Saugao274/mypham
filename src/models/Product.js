@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { getEffectiveSlBan } from '@/lib/giftHelper';
 
 // Bám sát các cột trong sheet gốc:
 // TT | TÊN SP | Loại hàng | Sl | Giá mua | Tổng vốn | SL còn | Vốn còn |
@@ -42,13 +43,18 @@ ProductSchema.virtual('vonCon').get(function () {
   return round2((this.slCon || 0) * (this.giaMua || 0));
 });
 ProductSchema.virtual('tongBan').get(function () {
-  return round2((this.slBan || 0) * (this.giaBan || 0));
+  // Trừ SL tặng ra khỏi doanh thu
+  const effectiveSlBan = getEffectiveSlBan(this);
+  return round2(effectiveSlBan * (this.giaBan || 0));
 });
 ProductSchema.virtual('tongChi').get(function () {
   return round2((this.slChi || 0) * (this.giaMua || 0));
 });
 ProductSchema.virtual('tongLai').get(function () {
-  const doanhThu = (this.slBan || 0) * (this.giaBan || 0);
+  // Doanh thu chỉ tính SL bán thực (trừ tặng)
+  const effectiveSlBan = getEffectiveSlBan(this);
+  const doanhThu = effectiveSlBan * (this.giaBan || 0);
+  // Chi phí vẫn tính hết slBan (vì hàng tặng vẫn mất vốn)
   const goc = (this.slBan || 0) * (this.giaMua || 0);
   return round2(doanhThu - goc - (this.giamCuoc || 0));
 });

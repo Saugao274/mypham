@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import { CATEGORIES, CATEGORY_MAP, matchSheetToCategory } from './categories.js';
+import { getEffectiveSlBan } from './giftHelper.js';
 
 // ============ IMPORT ============
 
@@ -158,9 +159,10 @@ const PRODUCT_HEADERS_NO_LOAI = [
 ];
 
 function computeRow(p) {
+  const effectiveSlBan = getEffectiveSlBan(p);
   const tongVon = round2((p.sl || 0) * (p.giaMua || 0));
   const vonCon = round2((p.slCon || 0) * (p.giaMua || 0));
-  const tongBan = round2((p.slBan || 0) * (p.giaBan || 0));
+  const tongBan = round2(effectiveSlBan * (p.giaBan || 0));
   const tongChi = round2((p.slChi || 0) * (p.giaMua || 0));
   const tongLai = round2(tongBan - (p.slBan || 0) * (p.giaMua || 0) - (p.giamCuoc || 0));
   return { tongVon, vonCon, tongBan, tongLai, tongChi };
