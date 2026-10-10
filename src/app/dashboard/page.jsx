@@ -90,7 +90,7 @@ export default function DashboardPage() {
         <div className="p-3 border-b border-slate-100">
           <h2 className="font-semibold text-brand-700">Chi tiết theo danh mục</h2>
         </div>
-        <div className="scroll-x">
+        <div className="scroll-x height:max-content">
           <table className="tbl">
             <thead>
               <tr>
